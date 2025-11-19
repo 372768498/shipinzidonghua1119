@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 import {
   scrapeTikTokVideos,
   scrapeYouTubeVideos,
@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
 
         console.log(`✅ AI分析完成`)
 
-        // 保存到数据库
-        const { data, error } = await supabase
+        // 使用supabaseAdmin保存到数据库（绕过RLS）
+        const { data, error } = await supabaseAdmin
           .from('viral_videos')
           .upsert(
             {
