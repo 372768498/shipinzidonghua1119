@@ -24,33 +24,61 @@ export async function POST(request: NextRequest) {
     let videos: any[] = []
 
     // 根据平台选择爬虫
-    if (platform === 'tiktok') {
-      const hashtags = keywords ? keywords.split(',').map((k: string) => k.trim()) : ['ai', 'tech']
-      videos = await scrapeTikTokVideos({ hashtags, count })
-    } else if (platform === 'youtube') {
-      videos = await scrapeYouTubeVideos({
-        searchQuery: keywords || 'AI technology',
-        maxResults: count,
-      })
-    } else {
+    try {
+      if (platform === 'tiktok') {
+        const hashtags = keywords
+          ? keywords.split(',').map((k: string) => k.trim())
+          : ['ai', 'tech']
+        console.log('📱 爬取TikTok, hashtags:', hashtags)
+        videos = await scrapeTikTokVideos({ hashtags, count })
+      } else if (platform === 'youtube') {
+        console.log('📺 爬取YouTube, query:', keywords || 'AI technology')
+        videos = await scrapeYouTubeVideos({
+          searchQuery: keywords || 'AI technology',
+          maxResults: count,
+        })
+      } else {
+        return NextResponse.json(
+          { error: '不支持的平台，请选择 tiktok 或 youtube' },
+          { status: 400 }
+        )
+      }
+    } catch (scrapeError: any) {
+      console.error('❌ 爬取失败:', scrapeError)
       return NextResponse.json(
-        { error: '不支持的平台，请选择 tiktok 或 youtube' },
-        { status: 400 }
+        {
+          error: `爬取失败: ${scrapeError.message}`,
+          details: scrapeError.toString(),
+        },
+        { status: 500 }
       )
     }
 
     console.log(`✅ 爬取完成，获得 ${videos.length} 个视频`)
 
+    if (videos.length === 0) {
+      return NextResponse.json({
+        success: true,
+        count: 0,
+        videos: [],
+        message: '爬取完成但未找到视频。可能原因：1) Apify配额用完 2) 关键词没有结果 3) 需要等待更长时间',
+      })
+    }
+
     // 处理和保存视频数据
     const savedVideos = []
+    const errors = []
 
-    for (const video of videos.slice(0, count)) {
+    for (let i = 0; i < Math.min(videos.length, count); i++) {
+      const video = videos[i]
       try {
         // 标准化数据
         const videoData =
           platform === 'tiktok'
             ? normalizeTikTokData(video)
             : normalizeYouTubeData(video)
+
+        console.log(`📝 处理视频 ${i + 1}/${count}: ${videoData.title}`)
 
         // 计算爆款分数
         const viralScore = calculateViralScore({
@@ -60,8 +88,10 @@ export async function POST(request: NextRequest) {
           shares: videoData.shares,
         })
 
+        console.log(`🔥 爆款分: ${viralScore}`)
+
         // AI分析
-        console.log(`🤖 正在分析: ${videoData.title}`)
+        console.log(`🤖 AI分析中...`)
         const aiAnalysis = await analyzeVideoContent({
           title: videoData.title,
           description: videoData.description,
@@ -69,6 +99,8 @@ export async function POST(request: NextRequest) {
           likes: videoData.likes,
           comments: videoData.comments,
         })
+
+        console.log(`✅ AI分析完成`)
 
         // 保存到数据库
         const { data, error } = await supabase
@@ -100,16 +132,18 @@ export async function POST(request: NextRequest) {
           .single()
 
         if (error) {
-          console.error('保存视频失败:', error)
+          console.error('❌ 保存失败:', error)
+          errors.push({ video: videoData.title, error: error.message })
         } else {
           savedVideos.push(data)
           console.log(`✅ 已保存: ${videoData.title}`)
         }
 
-        // 避免API限流
+        // 避免API限流 - 每个视频间隔1.5秒
         await new Promise((resolve) => setTimeout(resolve, 1500))
-      } catch (error) {
-        console.error('处理视频失败:', error)
+      } catch (error: any) {
+        console.error(`❌ 处理视频 ${i + 1} 失败:`, error)
+        errors.push({ index: i + 1, error: error.message })
       }
     }
 
@@ -119,11 +153,17 @@ export async function POST(request: NextRequest) {
       success: true,
       count: savedVideos.length,
       videos: savedVideos,
+      totalScraped: videos.length,
+      errors: errors.length > 0 ? errors : undefined,
     })
   } catch (error: any) {
-    console.error('爬取错误:', error)
+    console.error('❌ 总体错误:', error)
     return NextResponse.json(
-      { error: error.message || '爬取失败' },
+      {
+        error: error.message || '爬取失败',
+        details: error.toString(),
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      },
       { status: 500 }
     )
   }
