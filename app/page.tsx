@@ -14,10 +14,16 @@ export default function Home() {
         
         <div className="flex gap-4 mt-8">
           <a
-            href="/auth/signin"
+            href="/discover"
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
-            开始使用
+            🔍 发现爆款
+          </a>
+          <a
+            href="/generate"
+            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+          >
+            🎬 生成视频
           </a>
           <a
             href="/docs"
@@ -30,21 +36,34 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 max-w-4xl">
           <div className="p-6 border border-border rounded-lg">
             <h3 className="font-semibold text-lg mb-2">🔍 爆款发现</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-3">
               AI自动分析TikTok、YouTube等平台的热门视频
             </p>
+            <a
+              href="/discover"
+              className="text-sm text-primary hover:underline"
+            >
+              立即体验 →
+            </a>
           </div>
           <div className="p-6 border border-border rounded-lg">
             <h3 className="font-semibold text-lg mb-2">🎬 智能生成</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-3">
               基于爆款创意，使用AI模型生成原创视频内容
             </p>
+            <a
+              href="/generate"
+              className="text-sm text-primary hover:underline"
+            >
+              开始创作 →
+            </a>
           </div>
           <div className="p-6 border border-border rounded-lg">
             <h3 className="font-semibold text-lg mb-2">📤 自动发布</h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-3">
               一键发布到YouTube，自动优化标题和描述
             </p>
+            <span className="text-sm text-muted-foreground">即将推出</span>
           </div>
         </div>
       </main>
