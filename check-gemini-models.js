@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 检查Google Gemini API可用的所有模型
+ * 测试Gemini 3.0模型是否可用
  */
 
 require('dotenv').config();
@@ -11,156 +11,123 @@ const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error('❌ 错误: 未找到GOOGLE_GEMINI_API_KEY环境变量');
-  console.log('\n请在.env文件中设置:');
-  console.log('GOOGLE_GEMINI_API_KEY=your_api_key_here\n');
   process.exit(1);
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-console.log('🔍 正在检查你的API Key可访问的所有Gemini模型...\n');
+console.log('🔍 测试你的API Key能否访问Gemini 3.0...\n');
 console.log('='.repeat(80));
 
-async function listAllModels() {
+// 要测试的模型列表（按优先级）
+const modelsToTest = [
+  // Gemini 3.0 可能的名称
+  'gemini-3.0-pro',
+  'gemini-3.0-pro-preview',
+  'gemini-3-pro',
+  'gemini-3.0-flash',
+  'models/gemini-3.0-pro',
+  'models/gemini-3.0-pro-preview',
+  
+  // Gemini 2.5
+  'gemini-2.5-pro',
+  'gemini-2.5-flash',
+  
+  // Gemini 2.0
+  'gemini-2.0-flash-exp',
+  'gemini-2.0-flash',
+  
+  // Gemini 1.5 (肯定能用)
+  'gemini-1.5-pro',
+  'gemini-1.5-flash',
+];
+
+async function testModel(modelName) {
   try {
-    // 获取所有可用模型
-    const models = await genAI.listModels();
+    console.log(`\n🧪 测试: ${modelName}`);
     
-    if (models.length === 0) {
-      console.log('⚠️  未找到任何可用模型');
-      console.log('可能原因：');
-      console.log('1. API Key无效');
-      console.log('2. API Key没有访问权限');
-      console.log('3. 需要在Google AI Studio中申请模型访问权限');
-      return;
-    }
-
-    console.log(`\n✅ 找到 ${models.length} 个可用模型:\n`);
-
-    // 按版本分组
-    const gemini3Models = [];
-    const gemini25Models = [];
-    const gemini2Models = [];
-    const gemini15Models = [];
-    const otherModels = [];
-
-    models.forEach(model => {
-      const name = model.name.replace('models/', '');
-      
-      if (name.includes('gemini-3') || name.includes('gemini3')) {
-        gemini3Models.push(model);
-      } else if (name.includes('gemini-2.5') || name.includes('gemini2.5')) {
-        gemini25Models.push(model);
-      } else if (name.includes('gemini-2.0') || name.includes('gemini2.0') || name.includes('gemini-2')) {
-        gemini2Models.push(model);
-      } else if (name.includes('gemini-1.5') || name.includes('gemini1.5')) {
-        gemini15Models.push(model);
-      } else {
-        otherModels.push(model);
-      }
-    });
-
-    // 显示Gemini 3.0模型（最重要）
-    if (gemini3Models.length > 0) {
-      console.log('🔥 Gemini 3.0 系列模型:');
-      console.log('-'.repeat(80));
-      gemini3Models.forEach(model => {
-        const name = model.name.replace('models/', '');
-        console.log(`\n  ✅ ${name}`);
-        console.log(`     显示名: ${model.displayName}`);
-        console.log(`     描述: ${model.description || '无描述'}`);
-        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
-      });
-      console.log('\n');
-    } else {
-      console.log('❌ 未找到Gemini 3.0模型');
-      console.log('   你的API Key可能没有访问权限\n');
-    }
-
-    // 显示Gemini 2.5模型
-    if (gemini25Models.length > 0) {
-      console.log('⭐ Gemini 2.5 系列模型:');
-      console.log('-'.repeat(80));
-      gemini25Models.forEach(model => {
-        const name = model.name.replace('models/', '');
-        console.log(`\n  ✅ ${name}`);
-        console.log(`     显示名: ${model.displayName}`);
-        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
-      });
-      console.log('\n');
-    }
-
-    // 显示Gemini 2.0模型
-    if (gemini2Models.length > 0) {
-      console.log('💫 Gemini 2.0 系列模型:');
-      console.log('-'.repeat(80));
-      gemini2Models.forEach(model => {
-        const name = model.name.replace('models/', '');
-        console.log(`\n  ✅ ${name}`);
-        console.log(`     显示名: ${model.displayName}`);
-        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
-      });
-      console.log('\n');
-    }
-
-    // 显示Gemini 1.5模型
-    if (gemini15Models.length > 0) {
-      console.log('📦 Gemini 1.5 系列模型:');
-      console.log('-'.repeat(80));
-      gemini15Models.forEach(model => {
-        const name = model.name.replace('models/', '');
-        console.log(`\n  ✅ ${name}`);
-        console.log(`     显示名: ${model.displayName}`);
-        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
-      });
-      console.log('\n');
-    }
-
-    // 显示其他模型
-    if (otherModels.length > 0) {
-      console.log('🔧 其他模型:');
-      console.log('-'.repeat(80));
-      otherModels.forEach(model => {
-        const name = model.name.replace('models/', '');
-        console.log(`\n  ✅ ${name}`);
-        console.log(`     显示名: ${model.displayName}`);
-      });
-      console.log('\n');
-    }
-
-    console.log('='.repeat(80));
-    console.log('\n📝 建议:');
+    const model = genAI.getGenerativeModel({ model: modelName });
     
-    if (gemini3Models.length > 0) {
-      const bestModel = gemini3Models[0].name.replace('models/', '');
-      console.log(`\n✅ 推荐使用: ${bestModel}`);
-      console.log('   这是你可用的最新最强Gemini 3.0模型！');
-    } else if (gemini25Models.length > 0) {
-      const bestModel = gemini25Models[0].name.replace('models/', '');
-      console.log(`\n✅ 推荐使用: ${bestModel}`);
-      console.log('   你的API Key暂时无法访问Gemini 3.0');
-      console.log('   可能需要:');
-      console.log('   1. 申请Gemini 3.0早期访问权限');
-      console.log('   2. 升级API计划');
-      console.log('   3. 等待公开发布');
-    } else if (gemini2Models.length > 0) {
-      const bestModel = gemini2Models[0].name.replace('models/', '');
-      console.log(`\n✅ 推荐使用: ${bestModel}`);
-    } else if (gemini15Models.length > 0) {
-      const bestModel = gemini15Models[0].name.replace('models/', '');
-      console.log(`\n✅ 推荐使用: ${bestModel}`);
-    }
-
-    console.log('\n💡 访问 https://ai.google.dev/gemini-api/docs/models/gemini 查看最新文档\n');
-
+    // 发送一个简单的测试请求
+    const result = await model.generateContent('Say "Hello" in JSON format: {"message": "..."}');
+    const response = await result.response;
+    const text = response.text();
+    
+    console.log(`   ✅ 可用！`);
+    console.log(`   响应: ${text.substring(0, 50)}...`);
+    
+    return { modelName, available: true, response: text };
   } catch (error) {
-    console.error('\n❌ 获取模型列表失败:', error.message);
-    console.error('\n可能原因:');
-    console.error('1. API Key无效或过期');
-    console.error('2. 网络连接问题');
-    console.error('3. API服务暂时不可用');
-    console.error('\n完整错误:', error);
+    console.log(`   ❌ 不可用`);
+    console.log(`   错误: ${error.message.substring(0, 100)}`);
+    
+    return { modelName, available: false, error: error.message };
   }
 }
 
-listAllModels();
+async function testAllModels() {
+  const results = [];
+  
+  for (const modelName of modelsToTest) {
+    const result = await testModel(modelName);
+    results.push(result);
+    
+    // 如果找到了Gemini 3.0，立即报告
+    if (result.available && modelName.includes('3')) {
+      console.log('\n\n' + '='.repeat(80));
+      console.log('🎉🎉🎉 找到可用的Gemini 3.0模型！🎉🎉🎉');
+      console.log('='.repeat(80));
+      console.log(`\n✅ 模型名称: ${result.modelName}`);
+      console.log('\n💡 我会立即更新代码使用这个模型！');
+      break;
+    }
+    
+    // 避免API限流
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }
+  
+  console.log('\n\n' + '='.repeat(80));
+  console.log('📊 测试结果汇总');
+  console.log('='.repeat(80));
+  
+  const available = results.filter(r => r.available);
+  const unavailable = results.filter(r => !r.available);
+  
+  console.log(`\n✅ 可用模型 (${available.length}个):`);
+  available.forEach(r => {
+    console.log(`   • ${r.modelName}`);
+  });
+  
+  console.log(`\n❌ 不可用模型 (${unavailable.length}个):`);
+  unavailable.forEach(r => {
+    console.log(`   • ${r.modelName}`);
+  });
+  
+  if (available.length > 0) {
+    const best = available[0];
+    console.log('\n\n' + '='.repeat(80));
+    console.log('🏆 推荐使用');
+    console.log('='.repeat(80));
+    console.log(`\n模型: ${best.modelName}`);
+    
+    if (best.modelName.includes('3')) {
+      console.log('版本: Gemini 3.0 ⭐⭐⭐ (最新最强！)');
+    } else if (best.modelName.includes('2.5')) {
+      console.log('版本: Gemini 2.5 ⭐⭐ (很强，但不是最新)');
+    } else if (best.modelName.includes('2')) {
+      console.log('版本: Gemini 2.0 ⭐');
+    } else {
+      console.log('版本: Gemini 1.5 (稳定版本)');
+    }
+    
+    console.log('\n');
+  } else {
+    console.log('\n\n❌ 未找到任何可用模型！');
+    console.log('可能原因:');
+    console.log('1. API Key无效');
+    console.log('2. 网络代理配置问题');
+    console.log('3. API配额用尽');
+  }
+}
+
+testAllModels().catch(console.error);
