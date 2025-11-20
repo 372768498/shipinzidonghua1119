@@ -1,10 +1,14 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 import { AIAnalysis } from '@/types/database'
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+})
 
 /**
- * 使用Gemini 3.0 Pro分析视频内容
+ * 使用AI分析视频内容（自动降级：Gemini 2.0 → Gemini 1.5 → OpenAI）
  */
 export async function analyzeVideoContent(data: {
   title: string
@@ -13,9 +17,6 @@ export async function analyzeVideoContent(data: {
   likes: number
   comments: number
 }): Promise<AIAnalysis> {
-  // 使用最新的 Gemini 3.0 Pro 模型
-  const model = genAI.getGenerativeModel({ model: 'gemini-3.0-pro' })
-
   const prompt = `
 分析以下视频的爆款因素，并提供创作建议：
 
@@ -38,29 +39,71 @@ export async function analyzeVideoContent(data: {
 只返回JSON，不要其他文字。
 `
 
-  try {
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text = response.text()
+  // 尝试顺序：Gemini 2.0 Exp → Gemini 1.5 Pro → OpenAI
+  const models = [
+    { type: 'gemini', name: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)' },
+    { type: 'gemini', name: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+    { type: 'gemini', name: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { type: 'openai', name: 'gpt-4o-mini', label: 'GPT-4o-mini' },
+  ]
 
-    // 提取JSON（移除可能的markdown代码块标记）
-    const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    
-    const analysis = JSON.parse(jsonText) as AIAnalysis
+  for (const modelConfig of models) {
+    try {
+      if (modelConfig.type === 'gemini') {
+        console.log(`🤖 尝试使用: ${modelConfig.label}`)
+        const model = genAI.getGenerativeModel({ model: modelConfig.name })
+        
+        const result = await model.generateContent(prompt)
+        const response = await result.response
+        const text = response.text()
 
-    return analysis
-  } catch (error) {
-    console.error('Gemini 3.0分析错误:', error)
+        // 提取JSON（移除可能的markdown代码块标记）
+        const jsonText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+        const analysis = JSON.parse(jsonText) as AIAnalysis
 
-    // 返回默认分析
-    return {
-      summary: data.title.substring(0, 50),
-      key_points: ['高播放量', '用户喜爱', '值得参考'],
-      content_type: '未知',
-      target_audience: '大众用户',
-      viral_factors: ['内容质量好', '话题热度高', '传播性强'],
-      recommended_prompt: `Create a video about: ${data.title}`,
+        console.log(`✅ ${modelConfig.label} 分析成功`)
+        return analysis
+      } else {
+        // OpenAI
+        console.log(`🤖 尝试使用: ${modelConfig.label}`)
+        const completion = await openai.chat.completions.create({
+          model: modelConfig.name,
+          messages: [
+            {
+              role: 'system',
+              content: '你是一个专业的短视频内容分析师，擅长分析爆款视频的成功因素。',
+            },
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          response_format: { type: 'json_object' },
+        })
+
+        const text = completion.choices[0].message.content || '{}'
+        const analysis = JSON.parse(text) as AIAnalysis
+
+        console.log(`✅ ${modelConfig.label} 分析成功`)
+        return analysis
+      }
+    } catch (error: any) {
+      console.error(`❌ ${modelConfig.label} 失败:`, error.message)
+      // 继续尝试下一个模型
+      continue
     }
+  }
+
+  // 所有模型都失败，返回默认分析
+  console.error('⚠️ 所有AI模型均失败，使用默认分析')
+  return {
+    summary: data.title.substring(0, 50),
+    key_points: ['高播放量', '用户喜爱', '值得参考'],
+    content_type: '未知',
+    target_audience: '大众用户',
+    viral_factors: ['内容质量好', '话题热度高', '传播性强'],
+    recommended_prompt: `Create a video about: ${data.title}`,
   }
 }
 
