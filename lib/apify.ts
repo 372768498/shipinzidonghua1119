@@ -66,6 +66,11 @@ export async function scrapeTikTokVideos(options: {
 
   // 获取结果
   const { items } = await client.dataset(run.defaultDatasetId).listItems()
+  
+  // 调试：打印第一个视频数据
+  if (items.length > 0) {
+    console.log('📊 TikTok返回的第一个视频数据:', JSON.stringify(items[0], null, 2))
+  }
 
   return items as TikTokVideoData[]
 }
@@ -111,6 +116,12 @@ export async function scrapeYouTubeVideos(options: {
 
         // 获取结果
         const { items } = await client.dataset(run.defaultDatasetId).listItems()
+        
+        // 调试：打印第一个视频数据结构
+        if (items.length > 0) {
+          console.log('📊 YouTube返回的第一个视频数据:')
+          console.log(JSON.stringify(items[0], null, 2))
+        }
 
         return items as YouTubeVideoData[]
       } catch (error: any) {
