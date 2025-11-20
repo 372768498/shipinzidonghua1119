@@ -13,8 +13,8 @@ export async function analyzeVideoContent(data: {
   likes: number
   comments: number
 }): Promise<AIAnalysis> {
-  // 使用最新的模型名称
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+  // 使用最新的稳定模型
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
 
   const prompt = `
 分析以下视频的爆款因素，并提供创作建议：
