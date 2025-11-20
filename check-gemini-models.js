@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * 检查Google Gemini可用模型
+ * 检查Google Gemini API可用的所有模型
  */
 
 require('dotenv').config();
@@ -11,106 +11,156 @@ const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
 
 if (!GEMINI_API_KEY) {
   console.error('❌ 错误: 未找到GOOGLE_GEMINI_API_KEY环境变量');
+  console.log('\n请在.env文件中设置:');
+  console.log('GOOGLE_GEMINI_API_KEY=your_api_key_here\n');
   process.exit(1);
 }
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-async function checkModels() {
-  console.log('🔍 检查你的账户可用的所有Gemini模型...\n');
-  console.log('='.repeat(60));
-  
+console.log('🔍 正在检查你的API Key可访问的所有Gemini模型...\n');
+console.log('='.repeat(80));
+
+async function listAllModels() {
   try {
-    // 方法1: 尝试列出所有模型（可能不支持）
-    try {
-      const models = await genAI.listModels();
-      console.log('\n✅ 找到以下模型：\n');
-      
-      models.forEach(model => {
-        console.log(`📦 ${model.name}`);
-        console.log(`   显示名: ${model.displayName}`);
-        if (model.description) {
-          console.log(`   描述: ${model.description}`);
-        }
-        console.log(`   支持方法: ${model.supportedGenerationMethods?.join(', ') || '未知'}`);
-        console.log('');
-      });
-    } catch (e) {
-      console.log('ℹ️  listModels API不可用，使用手动测试方法\n');
+    // 获取所有可用模型
+    const models = await genAI.listModels();
+    
+    if (models.length === 0) {
+      console.log('⚠️  未找到任何可用模型');
+      console.log('可能原因：');
+      console.log('1. API Key无效');
+      console.log('2. API Key没有访问权限');
+      console.log('3. 需要在Google AI Studio中申请模型访问权限');
+      return;
     }
-    
-    // 方法2: 手动测试常见模型
-    console.log('\n' + '='.repeat(60));
-    console.log('🧪 手动测试常见模型...\n');
-    
-    const testModels = [
-      'gemini-3.0-pro',
-      'gemini-3.0-pro-preview',
-      'gemini-3-pro',
-      'gemini-2.5-pro',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash',
-      'gemini-pro',
-    ];
-    
-    const availableModels = [];
-    
-    for (const modelName of testModels) {
-      process.stdout.write(`测试 ${modelName}... `);
+
+    console.log(`\n✅ 找到 ${models.length} 个可用模型:\n`);
+
+    // 按版本分组
+    const gemini3Models = [];
+    const gemini25Models = [];
+    const gemini2Models = [];
+    const gemini15Models = [];
+    const otherModels = [];
+
+    models.forEach(model => {
+      const name = model.name.replace('models/', '');
       
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName });
-        const result = await model.generateContent('测试');
-        const response = await result.response;
-        
-        if (response.text()) {
-          console.log('✅ 可用');
-          availableModels.push(modelName);
-        }
-      } catch (error) {
-        if (error.status === 404) {
-          console.log('❌ 不存在');
-        } else if (error.status === 403) {
-          console.log('⚠️  需要权限');
-        } else {
-          console.log(`❌ 错误: ${error.message}`);
-        }
+      if (name.includes('gemini-3') || name.includes('gemini3')) {
+        gemini3Models.push(model);
+      } else if (name.includes('gemini-2.5') || name.includes('gemini2.5')) {
+        gemini25Models.push(model);
+      } else if (name.includes('gemini-2.0') || name.includes('gemini2.0') || name.includes('gemini-2')) {
+        gemini2Models.push(model);
+      } else if (name.includes('gemini-1.5') || name.includes('gemini1.5')) {
+        gemini15Models.push(model);
+      } else {
+        otherModels.push(model);
       }
-      
-      // 避免触发限流
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-    
-    console.log('\n' + '='.repeat(60));
-    console.log('\n📊 测试结果汇总:\n');
-    
-    if (availableModels.length > 0) {
-      console.log('✅ 可用的模型:');
-      availableModels.forEach(model => {
-        console.log(`   - ${model}`);
+    });
+
+    // 显示Gemini 3.0模型（最重要）
+    if (gemini3Models.length > 0) {
+      console.log('🔥 Gemini 3.0 系列模型:');
+      console.log('-'.repeat(80));
+      gemini3Models.forEach(model => {
+        const name = model.name.replace('models/', '');
+        console.log(`\n  ✅ ${name}`);
+        console.log(`     显示名: ${model.displayName}`);
+        console.log(`     描述: ${model.description || '无描述'}`);
+        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
       });
-      
-      console.log('\n💡 推荐使用: ' + availableModels[0]);
+      console.log('\n');
     } else {
-      console.log('❌ 未找到任何可用的模型');
-      console.log('\n可能的原因:');
-      console.log('1. API密钥无效');
-      console.log('2. 账户没有访问权限');
-      console.log('3. 需要等待Google开放新模型');
+      console.log('❌ 未找到Gemini 3.0模型');
+      console.log('   你的API Key可能没有访问权限\n');
     }
+
+    // 显示Gemini 2.5模型
+    if (gemini25Models.length > 0) {
+      console.log('⭐ Gemini 2.5 系列模型:');
+      console.log('-'.repeat(80));
+      gemini25Models.forEach(model => {
+        const name = model.name.replace('models/', '');
+        console.log(`\n  ✅ ${name}`);
+        console.log(`     显示名: ${model.displayName}`);
+        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
+      });
+      console.log('\n');
+    }
+
+    // 显示Gemini 2.0模型
+    if (gemini2Models.length > 0) {
+      console.log('💫 Gemini 2.0 系列模型:');
+      console.log('-'.repeat(80));
+      gemini2Models.forEach(model => {
+        const name = model.name.replace('models/', '');
+        console.log(`\n  ✅ ${name}`);
+        console.log(`     显示名: ${model.displayName}`);
+        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
+      });
+      console.log('\n');
+    }
+
+    // 显示Gemini 1.5模型
+    if (gemini15Models.length > 0) {
+      console.log('📦 Gemini 1.5 系列模型:');
+      console.log('-'.repeat(80));
+      gemini15Models.forEach(model => {
+        const name = model.name.replace('models/', '');
+        console.log(`\n  ✅ ${name}`);
+        console.log(`     显示名: ${model.displayName}`);
+        console.log(`     支持方法: ${model.supportedGenerationMethods.join(', ')}`);
+      });
+      console.log('\n');
+    }
+
+    // 显示其他模型
+    if (otherModels.length > 0) {
+      console.log('🔧 其他模型:');
+      console.log('-'.repeat(80));
+      otherModels.forEach(model => {
+        const name = model.name.replace('models/', '');
+        console.log(`\n  ✅ ${name}`);
+        console.log(`     显示名: ${model.displayName}`);
+      });
+      console.log('\n');
+    }
+
+    console.log('='.repeat(80));
+    console.log('\n📝 建议:');
     
-    console.log('\n' + '='.repeat(60));
-    console.log('\n📝 关于Gemini 3.0:');
-    console.log('- 如果Gemini 3.0显示"不存在"，说明Google还未公开发布API');
-    console.log('- 新模型通常先对部分用户开放，然后逐步推广');
-    console.log('- 建议使用测试中显示"可用"的最新模型');
-    console.log('- 访问 https://ai.google.dev 查看最新文档\n');
-    
+    if (gemini3Models.length > 0) {
+      const bestModel = gemini3Models[0].name.replace('models/', '');
+      console.log(`\n✅ 推荐使用: ${bestModel}`);
+      console.log('   这是你可用的最新最强Gemini 3.0模型！');
+    } else if (gemini25Models.length > 0) {
+      const bestModel = gemini25Models[0].name.replace('models/', '');
+      console.log(`\n✅ 推荐使用: ${bestModel}`);
+      console.log('   你的API Key暂时无法访问Gemini 3.0');
+      console.log('   可能需要:');
+      console.log('   1. 申请Gemini 3.0早期访问权限');
+      console.log('   2. 升级API计划');
+      console.log('   3. 等待公开发布');
+    } else if (gemini2Models.length > 0) {
+      const bestModel = gemini2Models[0].name.replace('models/', '');
+      console.log(`\n✅ 推荐使用: ${bestModel}`);
+    } else if (gemini15Models.length > 0) {
+      const bestModel = gemini15Models[0].name.replace('models/', '');
+      console.log(`\n✅ 推荐使用: ${bestModel}`);
+    }
+
+    console.log('\n💡 访问 https://ai.google.dev/gemini-api/docs/models/gemini 查看最新文档\n');
+
   } catch (error) {
-    console.error('❌ 检查失败:', error.message);
+    console.error('\n❌ 获取模型列表失败:', error.message);
+    console.error('\n可能原因:');
+    console.error('1. API Key无效或过期');
+    console.error('2. 网络连接问题');
+    console.error('3. API服务暂时不可用');
+    console.error('\n完整错误:', error);
   }
 }
 
-checkModels().catch(console.error);
+listAllModels();
