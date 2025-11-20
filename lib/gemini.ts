@@ -4,7 +4,7 @@ import { AIAnalysis } from '@/types/database'
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!)
 
 /**
- * 使用Gemini分析视频内容
+ * 使用Gemini 3.0 Pro分析视频内容
  */
 export async function analyzeVideoContent(data: {
   title: string
@@ -13,8 +13,8 @@ export async function analyzeVideoContent(data: {
   likes: number
   comments: number
 }): Promise<AIAnalysis> {
-  // 使用最新的稳定模型
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+  // 使用最新的 Gemini 3.0 Pro 模型
+  const model = genAI.getGenerativeModel({ model: 'gemini-3.0-pro' })
 
   const prompt = `
 分析以下视频的爆款因素，并提供创作建议：
@@ -50,7 +50,7 @@ export async function analyzeVideoContent(data: {
 
     return analysis
   } catch (error) {
-    console.error('Gemini分析错误:', error)
+    console.error('Gemini 3.0分析错误:', error)
 
     // 返回默认分析
     return {
