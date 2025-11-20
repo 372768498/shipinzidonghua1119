@@ -8,7 +8,7 @@ const openai = new OpenAI({
 })
 
 /**
- * 使用AI分析视频内容（自动降级：Gemini 2.0 → Gemini 1.5 → OpenAI）
+ * 使用AI分析视频内容（自动降级：Gemini 3.0 → 2.5 → 2.0 → 1.5 → OpenAI）
  */
 export async function analyzeVideoContent(data: {
   title: string
@@ -39,11 +39,28 @@ export async function analyzeVideoContent(data: {
 只返回JSON，不要其他文字。
 `
 
-  // 尝试顺序：Gemini 2.0 Exp → Gemini 1.5 Pro → OpenAI
+  // 尝试顺序：优先使用最新的Gemini模型
   const models = [
+    // Gemini 3.0 系列（优先尝试）
+    { type: 'gemini', name: 'gemini-3.0-pro', label: 'Gemini 3.0 Pro' },
+    { type: 'gemini', name: 'gemini-3.0-pro-preview', label: 'Gemini 3.0 Pro Preview' },
+    { type: 'gemini', name: 'gemini-3-pro', label: 'Gemini 3 Pro' },
+    
+    // Gemini 2.5 系列
+    { type: 'gemini', name: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+    { type: 'gemini', name: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { type: 'gemini', name: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite' },
+    
+    // Gemini 2.0 系列
     { type: 'gemini', name: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)' },
+    { type: 'gemini', name: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+    { type: 'gemini', name: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
+    
+    // Gemini 1.5 系列（稳定版本）
     { type: 'gemini', name: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     { type: 'gemini', name: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    
+    // OpenAI 备用
     { type: 'openai', name: 'gpt-4o-mini', label: 'GPT-4o-mini' },
   ]
 
