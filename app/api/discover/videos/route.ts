@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'viral_score'
     const limit = parseInt(searchParams.get('limit') || '20')
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('viral_videos')
       .select('*')
       .order(sortBy, { ascending: false })
