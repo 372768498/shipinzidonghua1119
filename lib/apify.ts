@@ -72,6 +72,7 @@ export async function scrapeTikTokVideos(options: {
 
 /**
  * 抓取YouTube热门视频
+ * 使用官方的YouTube Scraper: apify/youtube-scraper
  */
 export async function scrapeYouTubeVideos(options: {
   searchQuery?: string
@@ -82,17 +83,35 @@ export async function scrapeYouTubeVideos(options: {
   console.log('▶️ Starting YouTube scraper...')
   console.log('Search query:', searchQuery)
 
-  const run = await client.actor('bernardo/youtube-scraper').call({
-    searchKeywords: searchQuery,
-    maxResults,
-  })
+  try {
+    // 使用官方的YouTube Scraper
+    const run = await client.actor('apify/youtube-scraper').call({
+      searchKeywords: [searchQuery],
+      maxResults: maxResults,
+      // 其他可选参数
+      // proxy: { useApifyProxy: true },
+    })
 
-  console.log('✅ YouTube scraper finished')
+    console.log('✅ YouTube scraper finished')
 
-  // 获取结果
-  const { items } = await client.dataset(run.defaultDatasetId).listItems()
+    // 获取结果
+    const { items } = await client.dataset(run.defaultDatasetId).listItems()
 
-  return items as YouTubeVideoData[]
+    return items as YouTubeVideoData[]
+  } catch (error: any) {
+    console.error('YouTube scraper error:', error.message)
+    
+    // 如果官方Actor也不可用，尝试备用方案
+    if (error.type === 'insufficient-permissions') {
+      console.log('⚠️ YouTube scraper需要权限，尝试使用备用方案...')
+      
+      // 暂时返回空数组，不阻塞用户使用TikTok功能
+      console.log('💡 建议：暂时使用TikTok搜索功能，或升级Apify账户以使用YouTube')
+      return []
+    }
+    
+    throw error
+  }
 }
 
 /**
