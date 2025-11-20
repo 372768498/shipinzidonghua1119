@@ -189,20 +189,22 @@ function normalizeTikTokData(video: any) {
   }
 }
 
-// 标准化YouTube数据
+// 标准化YouTube数据 - 修复字段映射
 function normalizeYouTubeData(video: any) {
+  // Apify streamers/youtube-scraper 返回的数据结构
+  // viewCount, likes, commentsCount 在顶层，不在 statistics 里
   return {
     id: video.id,
     title: video.title || '无标题',
-    description: video.description,
-    thumbnail_url: video.thumbnails?.high?.url,
+    description: video.text || video.description || '',
+    thumbnail_url: video.thumbnailUrl || video.thumbnails?.high?.url,
     video_url: video.url || `https://www.youtube.com/watch?v=${video.id}`,
-    views: parseInt(video.statistics?.viewCount || '0'),
-    likes: parseInt(video.statistics?.likeCount || '0'),
-    comments: parseInt(video.statistics?.commentCount || '0'),
+    views: parseInt(video.viewCount || video.statistics?.viewCount || '0'),
+    likes: parseInt(video.likes || video.statistics?.likeCount || '0'),
+    comments: parseInt(video.commentsCount || video.statistics?.commentCount || '0'),
     shares: 0, // YouTube API不提供分享数
-    author_name: video.channelTitle,
+    author_name: video.channelName || video.channelTitle,
     author_id: video.channelId,
-    published_at: video.publishedAt,
+    published_at: video.date || video.publishedAt,
   }
 }
