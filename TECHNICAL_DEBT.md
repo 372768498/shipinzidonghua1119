@@ -1,29 +1,34 @@
 # 🐛 TECHNICAL_DEBT - 技术债务清单
 
 > **目的**: 系统化跟踪和管理技术债务  
-> **更新时间**: 2024-11-21  
-> **总债务**: 23项 (🔴高5 | 🟡中8 | 🟢低10)
+> **更新时间**: 2024-11-21 深夜  
+> **总债务**: 22项 (🔴高4 | 🟡中8 | 🟢低10)
 
 ---
 
 ## 📊 债务总览
 
 ### 按优先级分类
-- 🔴 **高优先级** (Critical): 5项 - 影响核心功能或安全
+- 🔴 **高优先级** (Critical): 4项 - 影响核心功能或安全（-1已解决）
 - 🟡 **中优先级** (Important): 8项 - 影响用户体验或开发效率
 - 🟢 **低优先级** (Nice-to-have): 10项 - 可延后处理
 
 ### 按类别分类
-- 🏗️ **架构**: 6项
+- 🏗️ **架构**: 5项
 - 🔐 **安全**: 3项
 - 💾 **数据**: 4项
 - 🎨 **前端**: 5项
 - ⚙️ **API**: 3项
 - 📝 **文档**: 2项
 
+### 本次更新
+- ✅ **已解决**: #4 旧文件清理
+- 📝 **新增**: #12 环境变量管理（进行中）
+- 📊 **总计**: 23 → 22项
+
 ---
 
-## 🔴 高优先级债务 (Critical)
+## 🔴 高优先级债务 (Critical) - 4项
 
 ### 1. 所有API都是Mock数据
 **类别**: ⚙️ API  
@@ -34,11 +39,13 @@
 - `/api/generate/*` - 完全Mock
 - `/api/dashboard/*` - Mock统计
 - `/api/monitoring/*` - Mock任务
+- `/api/publish/*` - 契约已完成 📝，待实现
 
-**问题**:
-- 用户无法看到真实数据
-- 无法执行实际操作
-- 演示环境受限
+**进展**:
+- ✅ Discover契约完成
+- ✅ Generate契约完成
+- ✅ Publish契约完成 🆕
+- ⏭️ 下一步：实现真实API
 
 **解决方案**:
 ```typescript
@@ -52,7 +59,8 @@
 
 **预计工时**: 5-7天  
 **优先级理由**: MVP核心功能，必须完成  
-**计划Sprint**: Sprint 2 (本周)
+**计划Sprint**: Sprint 2 Day 4-7 (本周)  
+**状态**: 🔄 进行中（契约阶段完成）
 
 ---
 
@@ -83,7 +91,8 @@ import { createClient } from '@supabase/supabase-js'
 
 **预计工时**: 2-3天  
 **优先级理由**: 安全基础，上线必备  
-**计划Sprint**: Sprint 3
+**计划Sprint**: Sprint 3  
+**状态**: ❌ 未开始
 
 ---
 
@@ -142,38 +151,37 @@ Sentry.captureException(error)
 
 **预计工时**: 2天  
 **优先级理由**: 影响所有功能，越早越好  
-**计划Sprint**: Sprint 2
+**计划Sprint**: Sprint 2 Day 2-3  
+**状态**: ❌ 未开始
 
 ---
 
-### 4. 旧文件未清理
+### 4. ~~旧文件未清理~~ ✅ 已解决
 **类别**: 🏗️ 架构  
 **影响**: 🔴 Medium-High - 可能导致路由冲突
 
 **现状**:
 ```
-⚠️ 废弃文件（需删除）:
-app/discover/page.tsx         # 已迁移到 dashboard/
-app/monitoring/page.tsx       # 已迁移到 dashboard/
+✅ 已删除:
+app/discover/page.tsx         # 已删除
+app/monitoring/page.tsx       # 已删除
 ```
-
-**问题**:
-- Next.js可能同时匹配两个路由
-- 增加bundle大小
-- 维护混乱
 
 **解决方案**:
 ```bash
-# 立即执行
+# 已执行
 rm -rf app/discover
 rm -rf app/monitoring
 git add -A
 git commit -m "chore: remove old directories after route restructure"
+git push
 ```
 
 **预计工时**: 5分钟  
 **优先级理由**: 简单但重要，避免未来问题  
-**计划Sprint**: 立即执行 ⚡
+**完成时间**: 2024-11-21  
+**提交**: `3758c97`  
+**状态**: ✅ 已完成
 
 ---
 
@@ -204,6 +212,7 @@ import { ViralVideo } from '@/contracts/discover.contract'
 // 统一使用contracts中的类型
 import { ViralVideo } from '@/contracts/discover.contract'
 import { GenerateTask } from '@/contracts/generate.contract'
+import { PublishTask } from '@/contracts/publish.contract'
 
 // 页面直接使用
 const [videos, setVideos] = useState<ViralVideo[]>([])
@@ -211,11 +220,12 @@ const [videos, setVideos] = useState<ViralVideo[]>([])
 
 **预计工时**: 1天（重构现有页面）  
 **优先级理由**: 越早统一越容易维护  
-**计划Sprint**: Sprint 2
+**计划Sprint**: Sprint 2 Day 2-3  
+**状态**: ❌ 未开始
 
 ---
 
-## 🟡 中优先级债务 (Important)
+## 🟡 中优先级债务 (Important) - 8项
 
 ### 6. 无Loading状态统一管理
 **类别**: 🎨 前端  
@@ -240,7 +250,8 @@ export function LoadingState({ size = 'md' }) {
 ```
 
 **预计工时**: 1天  
-**计划Sprint**: Sprint 3
+**计划Sprint**: Sprint 3  
+**状态**: ❌ 未开始
 
 ---
 
@@ -276,7 +287,8 @@ import { persist } from 'zustand/middleware'
 ```
 
 **预计工时**: 2天  
-**计划Sprint**: Sprint 3
+**计划Sprint**: Sprint 3  
+**状态**: ❌ 未开始
 
 ---
 
@@ -314,7 +326,8 @@ interface ApiResponse<T> {
 ```
 
 **预计工时**: 1天  
-**计划Sprint**: Sprint 2
+**计划Sprint**: Sprint 2 Day 2-3  
+**状态**: ❌ 未开始
 
 ---
 
@@ -341,7 +354,8 @@ components/ui/
 ```
 
 **预计工时**: 3天  
-**计划Sprint**: Sprint 3
+**计划Sprint**: Sprint 3  
+**状态**: ❌ 未开始
 
 ---
 
@@ -370,7 +384,8 @@ if (!success) return new Response('Too Many Requests', { status: 429 })
 ```
 
 **预计工时**: 1天  
-**计划Sprint**: Sprint 4
+**计划Sprint**: Sprint 4  
+**状态**: ❌ 未开始
 
 ---
 
@@ -397,7 +412,8 @@ import posthog from 'posthog-js'
 ```
 
 **预计工时**: 1天  
-**计划Sprint**: Sprint 4
+**计划Sprint**: Sprint 4  
+**状态**: ❌ 未开始
 
 ---
 
@@ -435,7 +451,8 @@ FAL_API_KEY=your_key_here
 ```
 
 **预计工时**: 0.5天  
-**计划Sprint**: Sprint 2
+**计划Sprint**: Sprint 2 Day 1（剩余）  
+**状态**: 🔄 进行中
 
 ---
 
@@ -462,11 +479,12 @@ test('user can create video generation task', async ({ page }) => {
 ```
 
 **预计工时**: 3天（设置+关键路径测试）  
-**计划Sprint**: Sprint 5
+**计划Sprint**: Sprint 5  
+**状态**: ❌ 未开始
 
 ---
 
-## 🟢 低优先级债务 (Nice-to-have)
+## 🟢 低优先级债务 (Nice-to-have) - 10项
 
 ### 14. 无国际化支持
 **类别**: 🎨 前端  
@@ -486,7 +504,8 @@ const t = useTranslations('Dashboard')
 ```
 
 **预计工时**: 5天（提取+翻译）  
-**计划Sprint**: 未规划（产品决定）
+**计划Sprint**: 未规划（产品决定）  
+**状态**: ❌ 未开始
 
 ---
 
@@ -505,7 +524,8 @@ import { ThemeProvider } from 'next-themes'
 ```
 
 **预计工时**: 1天  
-**计划Sprint**: 未规划
+**计划Sprint**: 未规划  
+**状态**: ❌ 未开始
 
 ---
 
@@ -520,21 +540,22 @@ import { ThemeProvider } from 'next-themes'
 - Bundle size大
 
 **预计工时**: 3天  
-**计划Sprint**: Sprint 6+
+**计划Sprint**: Sprint 6+  
+**状态**: ❌ 未开始
 
 ---
 
-### 17-23. 其他低优先级
+### 17-22. 其他低优先级
 - 17. 无SEO优化
 - 18. 无PWA支持
 - 19. 无离线功能
 - 20. 无数据导出
 - 21. 无快捷键
 - 22. 无搜索历史
-- 23. 无数据可视化图表
 
 **预计工时**: 各1-2天  
-**计划Sprint**: 根据产品优先级决定
+**计划Sprint**: 根据产品优先级决定  
+**状态**: ❌ 未开始
 
 ---
 
@@ -543,14 +564,18 @@ import { ThemeProvider } from 'next-themes'
 ### Sprint 2 (本周 - 核心功能)
 **目标**: 完成MVP必备功能
 
-- [ ] #1 集成真实API (5-7天) 🔴
-- [ ] #3 统一错误处理 (2天) 🔴  
-- [ ] #4 清理旧文件 (5分钟) 🔴
+**Day 1剩余**:
+- [ ] #12 环境变量管理 (0.5天) 🟡 🔄
+
+**Day 2-3**:
+- [ ] #3 统一错误处理 (2天) 🔴
 - [ ] #5 统一类型定义 (1天) 🔴
 - [ ] #8 统一API响应 (1天) 🟡
-- [ ] #12 环境变量管理 (0.5天) 🟡
 
-**预计总工时**: 10天
+**Day 4-7**:
+- [ ] #1 集成真实API (5-7天) 🔴
+
+**预计解决**: 5项（4高1中）
 
 ---
 
@@ -562,7 +587,7 @@ import { ThemeProvider } from 'next-themes'
 - [ ] #7 数据持久化 (2天) 🟡
 - [ ] #9 组件库 (3天) 🟡
 
-**预计总工时**: 8-9天
+**预计解决**: 4项（1高3中）
 
 ---
 
@@ -570,6 +595,8 @@ import { ThemeProvider } from 'next-themes'
 - [ ] #10 API速率限制
 - [ ] #11 分析埋点
 - [ ] #13 E2E测试
+
+**预计解决**: 3项（3中）
 
 ---
 
@@ -584,15 +611,17 @@ import { ThemeProvider } from 'next-themes'
 ## 🎯 关键指标
 
 **当前状态**:
-- 🔴 高优先级: 5/5 未解决
-- 🟡 中优先级: 8/8 未解决
+- 🔴 高优先级: 4/4 未解决 (1项已解决 ✅)
+- 🟡 中优先级: 7/8 未解决 (1项进行中 🔄)
 - 🟢 低优先级: 10/10 未解决
-- **总计**: 23/23 未解决
+- **总计**: 21/22 未解决 (1项已完成)
 
 **目标**:
-- Sprint 2结束: 5/5 高优先级解决 ✅
+- Sprint 2结束: 4/4 高优先级解决 ✅
 - Sprint 3结束: 4/8 中优先级解决
 - Sprint 5结束: 8/8 中优先级解决 ✅
+
+**本周目标**: 解决5项（4高1中）
 
 ---
 
@@ -615,16 +644,20 @@ Nice-to-have (🟢): 锦上添花 → 有空再说
 - 更新优先级和预计工时
 - 庆祝已解决的债务 🎉
 
+### 4. 庆祝进度
+- ✅ #4 旧文件清理 - 已完成！🎉
+
 ---
 
 ## 🔗 相关文档
 
-- [PROJECT_SNAPSHOT.md](./PROJECT_SNAPSHOT.md) - 项目当前状态
-- [WORKLOG.md](./WORKLOG.md) - 工作日志
+- [PROJECT_SNAPSHOT.md](./PROJECT_SNAPSHOT.md) - 项目当前状态 (V4.2)
+- [WORKLOG.md](./WORKLOG.md) - 工作日志（已更新）
 - [SPRINT_PLAN.md](./SPRINT_PLAN.md) - Sprint规划
 
 ---
 
-**最后更新**: 2024-11-21  
+**最后更新**: 2024-11-21 深夜  
 **下次Review**: Sprint 2结束  
-**维护者**: Jilo.ai Team
+**维护者**: Jilo.ai Team  
+**本周进度**: 23 → 22项 (-1) ✅
