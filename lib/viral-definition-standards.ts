@@ -324,23 +324,39 @@ export function isViral(
   const reasons: string[] = [];
   let score = 0;
   
-  // 1. 基础播放量检查
+  // 1. 先检查相对表现（重要！小账号的相对爆款）
+  const tier = getAccountTier(video.subscriberCount);
+  const requiredViews = video.subscriberCount * ACCOUNT_TIERS[tier].viewMultiplier;
+  const relativePerformance = video.views >= requiredViews;
+  
+  // 2. 基础播放量检查
   const viewThreshold = VIEW_THRESHOLDS[platform];
+  let hasMinViews = false;
+  
   if (video.views >= viewThreshold.viral) {
     score += 30;
     reasons.push('播放量达到爆款标准');
+    hasMinViews = true;
   } else if (video.views >= viewThreshold.hot) {
     score += 20;
     reasons.push('播放量达到热门标准');
+    hasMinViews = true;
   } else if (video.views >= viewThreshold.potential) {
     score += 10;
     reasons.push('播放量具有潜力');
+    hasMinViews = true;
+  } else if (relativePerformance) {
+    // 播放量虽低，但相对表现优秀，给予基础分
+    score += 15;
+    reasons.push('播放量较低但相对表现优秀');
+    hasMinViews = true;
   } else {
-    reasons.push('播放量未达到最低标准');
+    // 播放量低且相对表现也差，直接返回
+    reasons.push('播放量未达到最低标准且相对表现不佳');
     return { isViral: false, confidence: 0, reasons, score: 0 };
   }
   
-  // 2. 互动率检查
+  // 3. 互动率检查
   const likeRate = video.likes / video.views;
   const commentRate = video.comments / video.views;
   const shareRate = video.shares / video.views;
@@ -370,15 +386,13 @@ export function isViral(
     reasons.push('分享率优秀');
   }
   
-  // 3. 相对定义调整
-  const tier = getAccountTier(video.subscriberCount);
-  const requiredViews = video.subscriberCount * ACCOUNT_TIERS[tier].viewMultiplier;
-  if (video.views >= requiredViews) {
-    score += 15;
+  // 4. 相对定义加分（如果已经在步骤1中识别为相对爆款）
+  if (relativePerformance) {
+    score += 10;
     reasons.push(`相对粉丝数表现优秀（${tier}级账号）`);
   }
   
-  // 4. 时间新鲜度
+  // 5. 时间新鲜度
   const daysOld = (Date.now() - new Date(video.publishedAt).getTime()) / (1000 * 60 * 60 * 24);
   if (daysOld <= TIME_WINDOWS.freshness.hot) {
     score += 10;
@@ -388,7 +402,7 @@ export function isViral(
     reasons.push('内容新鲜（3天内）');
   }
   
-  // 5. 综合判断
+  // 6. 综合判断
   const confidence = Math.min(score, 100);
   const isViral = score >= 70; // 70分以上认为是爆款
   
