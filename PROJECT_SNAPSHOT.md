@@ -1,7 +1,7 @@
 # 📸 PROJECT SNAPSHOT - Jilo.ai 项目速查表
 
 > **最后更新**: 2024-11-21 晚  
-> **版本**: V3.1 - 前端加速版
+> **版本**: V3.2 - 视频生成API完成
 
 ---
 
@@ -12,8 +12,8 @@
 ┌──────────┐     ┌──────────┐     ┌──────────┐
 │  Discover│────>│ Generate │────>│  Publish │
 └──────────┘     └──────────┘     └──────────┘
-     ✅              ❌               ❌
-  UI完成         待开发           待开发
+     ✅              🔄               ❌
+  UI完成       API完成,UI待开     待开发
 ```
 
 ### 进度
@@ -22,11 +22,11 @@
 |------|----|----|--------|
 | Dashboard | ✅ Gemini | ✅ 基础 | 70% |
 | 爆款发现 | ✅ Gemini | 🔄 Mock | 60% |
-| 视频生成 | ❌ | ❌ | 0% |
+| 视频生成 | ❌ | ✅ Mock | 40% |
 | 自动发布 | ❌ | ❌ | 0% |
 | 数据监控 | ❌ | ❌ | 0% |
 
-**整体进度**: 30% (2/5模块有UI)
+**整体进度**: 35% (2/5模块有UI, 3/5模块有API)
 
 ---
 
@@ -39,8 +39,8 @@
 
 **已建立的工作流**:
 ```
-1. Claude创建契约文件 (types + mock + API)
-2. 用户发给Gemini开发UI
+1. Claude创建契约文件 (types + mock + API) ✅
+2. 用户发给Gemini开发UI                   ⏭️ 下一步
 3. Gemini生成page.tsx
 4. Claude实现真实API
 5. 集成测试
@@ -54,22 +54,48 @@
 contracts/          # 接口契约
 ├── discover.contract.ts     ✅
 ├── dashboard.contract.ts    ✅
-├── generate.contract.ts     ⏭️ 下一个
-└── publish.contract.ts      ⏭️
+├── generate.contract.ts     ✅ 新增
+├── GENERATE_PROMPT.md       ✅ 新增
+└── publish.contract.ts      ⏭️ 下一个
 
 app/
 ├── page.tsx                 ✅ 首页
 ├── dashboard/page.tsx       ✅ 控制台主页
 ├── discover/page.tsx        ✅ 爆款发现
-├── generate/page.tsx        ❌ 待开发
+├── generate/page.tsx        ⏭️ Gemini待开发
 └── publish/page.tsx         ❌ 待开发
 
 app/api/
 ├── discover/                ✅ 基础API
 ├── dashboard/               ✅ 基础API
-├── generate/                ❌ 待开发
+├── generate/                ✅ Mock API 新增
+│   ├── tasks/route.ts       ✅ 任务列表
+│   ├── tasks/[id]/route.ts  ✅ 任务详情/删除
+│   ├── create/route.ts      ✅ 创建任务
+│   └── models/route.ts      ✅ 模型列表
 └── publish/                 ❌ 待开发
 ```
+
+---
+
+## 🎉 今日完成 (Day 1)
+
+### ✅ 视频生成模块基础建设
+1. ✅ `contracts/generate.contract.ts` - 完整类型定义 + Mock数据
+   - 5种类型: GenerateTask, GenerateParams, ModelInfo等
+   - 4个AI模型: Minimax, Runway, Kling, Sora
+   - 5个示例任务
+
+2. ✅ `contracts/GENERATE_PROMPT.md` - Gemini开发指令
+   - 详细UI布局规范
+   - 交互功能要求
+   - 技术实现细节
+
+3. ✅ 4个Mock API端点
+   - GET `/api/generate/tasks` - 任务列表（筛选/搜索/排序）
+   - POST `/api/generate/create` - 创建任务（验证+成本计算）
+   - GET/DELETE `/api/generate/tasks/[id]` - 任务操作
+   - GET `/api/generate/models` - 模型列表
 
 ---
 
@@ -77,13 +103,13 @@ app/api/
 
 ### 高优先级
 1. **类型不统一**: Gemini生成的UI用自己的类型，未使用contracts
-2. **Mock API**: discover/dashboard API都是mock，未集成真实服务
+2. **Mock API**: discover/dashboard/generate API都是mock，未集成真实服务
 3. **无错误处理**: 前端缺少统一的错误边界
 4. **无用户认证**: 所有页面都是公开的
 
 ### 中优先级
 5. **无加载状态**: API调用缺少loading UI
-6. **无数据持久化**: 前端state刷新后丢失
+6. **无数据持久化**: 前端state刷新后丢失（Mock数据存在内存）
 7. **硬编码数据**: 很多数据是写死的
 
 ### 低优先级
@@ -98,10 +124,11 @@ app/api/
 ### Sprint目标
 **完成视频生成和YouTube发布的UI + 基础API**
 
-### Day 1: 视频生成UI (今天)
-- [ ] Claude创建 `contracts/generate.contract.ts`
-- [ ] Gemini开发 `app/generate/page.tsx`
-- [ ] Claude实现 `app/api/generate/route.ts` (mock)
+### Day 1: 视频生成 (今天) ✅
+- [x] ✅ Claude创建 `contracts/generate.contract.ts`
+- [x] ✅ Claude创建 `contracts/GENERATE_PROMPT.md`
+- [x] ✅ Claude实现 Mock API (4个端点)
+- [ ] 🔄 Gemini开发 `app/generate/page.tsx` - **下一步**
 
 ### Day 2: YouTube发布UI
 - [ ] Claude创建 `contracts/publish.contract.ts`
@@ -143,4 +170,18 @@ AI分析: Google Gemini
 
 ---
 
-**下一步**: 创建视频生成页面契约，继续Gemini加速开发！🚀
+## 📝 Gemini开发指令
+
+复制以下内容发给Gemini开发视频生成页面UI：
+
+```
+请阅读这个指令文档：
+https://github.com/372768498/shipinzidonghua1119/blob/main/contracts/GENERATE_PROMPT.md
+
+并参考契约文件：
+https://github.com/372768498/shipinzidonghua1119/blob/main/contracts/generate.contract.ts
+
+生成完整的 app/generate/page.tsx 文件
+```
+
+**下一步**: 发给Gemini开发UI，15分钟搞定！🚀
