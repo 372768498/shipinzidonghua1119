@@ -19,7 +19,7 @@ export interface GenerateRequest {
   prompt: string;
   model: AiModel;
   ratio: AspectRatio;
-  duration: number;
+  duration: number; // seconds
   enhancePrompt: boolean;
 }
 
@@ -27,7 +27,7 @@ export interface GenerateTask {
   id: string;
   status: GenerateStatus;
   request: GenerateRequest;
-  progress: number;
+  progress: number; // 0-100
   videoUrl?: string;
   thumbnailUrl?: string;
   errorMsg?: string;
@@ -44,6 +44,7 @@ const MOCK_THUMBNAILS = [
 ];
 
 const mockService = {
+  // 获取任务列表
   getTasks: async (): Promise<GenerateTask[]> => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -77,6 +78,7 @@ const mockService = {
     });
   },
 
+  // 创建任务
   createTask: async (req: GenerateRequest): Promise<GenerateTask> => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -94,6 +96,7 @@ const mockService = {
 
 // --- 3. UI 组件 ---
 
+// 模型选择卡片
 const ModelCard = ({ id, name, desc, selected, onClick }: any) => (
   <div 
     onClick={() => onClick(id)}
@@ -111,6 +114,7 @@ const ModelCard = ({ id, name, desc, selected, onClick }: any) => (
   </div>
 );
 
+// 状态徽章
 const StatusBadge = ({ status, progress }: { status: GenerateStatus, progress: number }) => {
   if (status === 'processing') {
     return (
@@ -141,20 +145,25 @@ const StatusBadge = ({ status, progress }: { status: GenerateStatus, progress: n
   );
 };
 
+// 主页面
 export default function GeneratePage() {
+  // Data State
   const [tasks, setTasks] = useState<GenerateTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Form State
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState<AiModel>("minimax");
   const [ratio, setRatio] = useState<AspectRatio>("9:16");
   const [duration, setDuration] = useState(5);
   const [enhancePrompt, setEnhancePrompt] = useState(true);
 
+  // Filter State
   const [filterStatus, setFilterStatus] = useState<'all' | GenerateStatus>('all');
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Init Load
   useEffect(() => {
     loadTasks();
   }, []);
@@ -166,6 +175,7 @@ export default function GeneratePage() {
     setIsLoading(false);
   };
 
+  // Handle Submit
   const handleSubmit = async () => {
     if (!prompt.trim()) return;
     setIsSubmitting(true);
@@ -185,6 +195,7 @@ export default function GeneratePage() {
     }
   };
 
+  // 过滤任务
   const filteredTasks = tasks.filter(t => {
     if (filterStatus !== 'all' && t.status !== filterStatus) return false;
     if (searchQuery && !t.request.prompt.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -194,6 +205,7 @@ export default function GeneratePage() {
   return (
     <div className="min-h-screen bg-[#0B0F17] text-slate-200 p-6 lg:p-8 font-sans">
       
+      {/* Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-white flex items-center gap-3">
           <Video className="text-purple-500" /> 
@@ -206,6 +218,7 @@ export default function GeneratePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
+        {/* --- Left Panel: Create Task (4 Cols) --- */}
         <div className="lg:col-span-4 space-y-6">
           <div className="bg-[#0F1219] border border-white/10 rounded-xl p-6 sticky top-6 shadow-xl shadow-black/20">
             <div className="flex items-center gap-2 text-white font-bold mb-6 border-b border-white/5 pb-4">
@@ -213,6 +226,7 @@ export default function GeneratePage() {
               创建新任务
             </div>
 
+            {/* 1. Prompt Input */}
             <div className="space-y-3 mb-6">
               <div className="flex justify-between items-center">
                 <label className="text-xs font-bold text-slate-400 uppercase">提示词 (Prompt)</label>
@@ -238,6 +252,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
+            {/* 2. Model Selection */}
             <div className="space-y-3 mb-6">
               <label className="text-xs font-bold text-slate-400 uppercase">AI 模型</label>
               <div className="grid grid-cols-1 gap-2">
@@ -256,6 +271,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
+            {/* 3. Settings (Ratio & Duration) */}
             <div className="grid grid-cols-2 gap-4 mb-8">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-400 uppercase">画面比例</label>
@@ -282,6 +298,7 @@ export default function GeneratePage() {
               </div>
             </div>
 
+            {/* Submit Button */}
             <button 
               onClick={handleSubmit}
               disabled={isSubmitting || !prompt.trim()}
@@ -296,8 +313,10 @@ export default function GeneratePage() {
           </div>
         </div>
 
+        {/* --- Right Panel: Task List (8 Cols) --- */}
         <div className="lg:col-span-8 space-y-6">
           
+          {/* Filters & Search */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#0F1219] p-2 rounded-xl border border-white/5">
              <div className="flex gap-1 bg-black/20 p-1 rounded-lg w-full sm:w-auto overflow-x-auto">
                 {['all', 'processing', 'success', 'failed'].map(status => (
@@ -327,6 +346,7 @@ export default function GeneratePage() {
              </div>
           </div>
 
+          {/* Task Grid */}
           {isLoading ? (
             <div className="h-64 flex items-center justify-center text-slate-500">
               <Loader2 size={32} className="animate-spin text-indigo-500 mb-2" />
@@ -348,6 +368,7 @@ export default function GeneratePage() {
                       exit={{ opacity: 0, scale: 0.95 }}
                       className="bg-[#0F1219] border border-white/5 rounded-xl overflow-hidden hover:border-white/20 transition-all group"
                    >
+                      {/* Top Section: Preview or Placeholder */}
                       <div className="aspect-video bg-black relative group/preview">
                          {task.status === 'success' && task.thumbnailUrl ? (
                            <>
@@ -369,6 +390,7 @@ export default function GeneratePage() {
                            </div>
                          )}
                          
+                         {/* Badges */}
                          <div className="absolute top-2 right-2">
                             <StatusBadge status={task.status} progress={task.progress} />
                          </div>
@@ -377,6 +399,7 @@ export default function GeneratePage() {
                          </div>
                       </div>
 
+                      {/* Bottom Section: Info */}
                       <div className="p-4">
                          <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
@@ -392,6 +415,7 @@ export default function GeneratePage() {
                                </span>
                             </div>
                             
+                            {/* Actions Menu (Placeholder) */}
                             <button className="text-slate-500 hover:text-white">
                                <MoreHorizontal size={16} />
                             </button>
@@ -401,6 +425,7 @@ export default function GeneratePage() {
                             {task.request.prompt}
                          </p>
 
+                         {/* Action Buttons */}
                          <div className="flex gap-2 pt-3 border-t border-white/5">
                             <button 
                                disabled={task.status !== 'success'}
