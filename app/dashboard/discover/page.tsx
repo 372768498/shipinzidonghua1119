@@ -9,10 +9,12 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(false)
   const [scraping, setScraping] = useState(false)
   
+  // 爬取参数
   const [platform, setPlatform] = useState('tiktok')
   const [keywords, setKeywords] = useState('ai,tech')
   const [count, setCount] = useState(10)
   
+  // 筛选参数
   const [filterPlatform, setFilterPlatform] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [minScore, setMinScore] = useState(0)
@@ -20,13 +22,14 @@ export default function DiscoverPage() {
   const [timeFilter, setTimeFilter] = useState('all')
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid')
 
+  // 加载视频列表
   const loadVideos = async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
         platform: filterPlatform,
         sortBy,
-        limit: '100',
+        limit: '100', // 加载更多以便前端筛选
       })
 
       const response = await fetch(`/api/discover/videos?${params}`)
@@ -42,10 +45,12 @@ export default function DiscoverPage() {
     }
   }
 
+  // 初始加载
   useEffect(() => {
     loadVideos()
   }, [filterPlatform, sortBy])
 
+  // 开始爬取
   const handleScrape = async () => {
     setScraping(true)
     try {
@@ -77,6 +82,7 @@ export default function DiscoverPage() {
     }
   }
 
+  // 删除视频
   const handleDelete = async (videoId: string) => {
     if (!confirm('确定要删除这个视频吗？')) return
 
@@ -97,7 +103,9 @@ export default function DiscoverPage() {
     }
   }
 
+  // 前端筛选
   const filteredVideos = videos.filter((video) => {
+    // 搜索过滤
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       const matchTitle = video.title?.toLowerCase().includes(query)
@@ -106,8 +114,10 @@ export default function DiscoverPage() {
       if (!matchTitle && !matchDesc && !matchAuthor) return false
     }
 
+    // 爆款分过滤
     if (video.viral_score && video.viral_score < minScore) return false
 
+    // 时间过滤
     if (timeFilter !== 'all' && video.scraped_at) {
       const scrapedDate = new Date(video.scraped_at)
       const now = new Date()
@@ -123,6 +133,7 @@ export default function DiscoverPage() {
     return true
   })
 
+  // 按日期分组（时间线视图）
   const groupedByDate = filteredVideos.reduce((groups, video) => {
     if (!video.scraped_at) return groups
 
@@ -136,6 +147,7 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* 头部 */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold mb-2">🔍 爆款视频发现</h1>
@@ -146,6 +158,7 @@ export default function DiscoverPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 爬取控制面板 - 可折叠 */}
         <details className="bg-card border border-border rounded-lg mb-8">
           <summary className="p-4 cursor-pointer font-semibold hover:bg-accent">
             🚀 爬取新视频
@@ -211,7 +224,9 @@ export default function DiscoverPage() {
           </div>
         </details>
 
+        {/* 搜索和筛选栏 */}
         <div className="bg-card border border-border rounded-lg p-4 mb-6">
+          {/* 搜索框 */}
           <div className="mb-4">
             <input
               type="text"
@@ -222,7 +237,9 @@ export default function DiscoverPage() {
             />
           </div>
 
+          {/* 筛选器 */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {/* 平台筛选 */}
             <div>
               <label className="block text-xs font-medium mb-1 text-muted-foreground">
                 平台
@@ -238,6 +255,7 @@ export default function DiscoverPage() {
               </select>
             </div>
 
+            {/* 爆款分筛选 */}
             <div>
               <label className="block text-xs font-medium mb-1 text-muted-foreground">
                 爆款分
@@ -254,6 +272,7 @@ export default function DiscoverPage() {
               </select>
             </div>
 
+            {/* 时间筛选 */}
             <div>
               <label className="block text-xs font-medium mb-1 text-muted-foreground">
                 爬取时间
@@ -270,6 +289,7 @@ export default function DiscoverPage() {
               </select>
             </div>
 
+            {/* 排序方式 */}
             <div>
               <label className="block text-xs font-medium mb-1 text-muted-foreground">
                 排序
@@ -286,6 +306,7 @@ export default function DiscoverPage() {
               </select>
             </div>
 
+            {/* 视图模式 */}
             <div>
               <label className="block text-xs font-medium mb-1 text-muted-foreground">
                 视图
@@ -315,6 +336,7 @@ export default function DiscoverPage() {
             </div>
           </div>
 
+          {/* 快捷筛选标签 */}
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               onClick={() => {
@@ -356,6 +378,7 @@ export default function DiscoverPage() {
           </div>
         </div>
 
+        {/* 视频展示区域 */}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
@@ -389,6 +412,7 @@ export default function DiscoverPage() {
             )}
           </div>
         ) : viewMode === 'grid' ? (
+          /* 网格视图 */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map((video) => (
               <VideoCard
@@ -404,6 +428,7 @@ export default function DiscoverPage() {
             ))}
           </div>
         ) : (
+          /* 时间线视图 */
           <div className="space-y-8">
             {Object.entries(groupedByDate)
               .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())

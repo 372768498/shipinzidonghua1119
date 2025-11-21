@@ -78,10 +78,12 @@ export default function MonitoringCenter() {
   const [sortBy, setSortBy] = useState('viral_score')
   const [searchQuery, setSearchQuery] = useState('')
 
+  // 加载监控任务
   useEffect(() => {
     loadTasks()
   }, [])
 
+  // 加载视频
   useEffect(() => {
     loadVideos()
   }, [selectedTask, filters, sortBy])
@@ -143,6 +145,7 @@ export default function MonitoringCenter() {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      {/* 页面标题 */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">🎯 监控中心</h1>
@@ -154,6 +157,7 @@ export default function MonitoringCenter() {
         </Button>
       </div>
 
+      {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-3">
@@ -206,7 +210,9 @@ export default function MonitoringCenter() {
         </Card>
       </div>
 
+      {/* 主要内容区域 */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* 左侧：任务列表 */}
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>监控任务</CardTitle>
@@ -253,10 +259,13 @@ export default function MonitoringCenter() {
           </CardContent>
         </Card>
 
+        {/* 右侧：视频列表 */}
         <div className="lg:col-span-3 space-y-4">
+          {/* 工具栏 */}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row gap-4">
+                {/* 搜索 */}
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -269,6 +278,7 @@ export default function MonitoringCenter() {
                   </div>
                 </div>
 
+                {/* 排序 */}
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue />
@@ -282,6 +292,7 @@ export default function MonitoringCenter() {
                   </SelectContent>
                 </Select>
 
+                {/* 视图模式 */}
                 <div className="flex gap-1 border rounded-md p-1">
                   <Button
                     variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -307,10 +318,12 @@ export default function MonitoringCenter() {
                 </div>
               </div>
 
+              {/* 筛选器 */}
               <FilterPanel filters={filters} onFiltersChange={setFilters} />
             </CardContent>
           </Card>
 
+          {/* 视频列表 */}
           {loading ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -343,12 +356,14 @@ export default function MonitoringCenter() {
         </div>
       </div>
 
+      {/* 创建任务对话框 */}
       <CreateTaskDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onTaskCreated={handleTaskCreated}
       />
 
+      {/* 视频详情模态框 */}
       {selectedVideo && (
         <VideoDetailModal
           video={selectedVideo}
