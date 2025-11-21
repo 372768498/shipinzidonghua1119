@@ -1,7 +1,7 @@
 # 📸 PROJECT SNAPSHOT - Jilo.ai 项目速查表
 
 > **最后更新**: 2024-11-21 晚  
-> **版本**: V3.2 - 视频生成API完成
+> **版本**: V4.0 - 完整路由重构版
 
 ---
 
@@ -12,21 +12,47 @@
 ┌──────────┐     ┌──────────┐     ┌──────────┐
 │  Discover│────>│ Generate │────>│  Publish │
 └──────────┘     └──────────┘     └──────────┘
-     ✅              🔄               ❌
-  UI完成       API完成,UI待开     待开发
+     ✅              ✅               ❌
+  UI完成         UI完成           待开发
 ```
 
 ### 进度
 
-| 模块 | UI | API | 完成度 |
-|------|----|----|--------|
-| Dashboard | ✅ Gemini | ✅ 基础 | 70% |
-| 爆款发现 | ✅ Gemini | 🔄 Mock | 60% |
-| 视频生成 | ❌ | ✅ Mock | 40% |
-| 自动发布 | ❌ | ❌ | 0% |
-| 数据监控 | ❌ | ❌ | 0% |
+| 模块 | UI | API | 路由 | 完成度 |
+|------|----|----|------|--------|
+| Landing | ✅ | N/A | `/` | 100% |
+| Login | ✅ | Mock | `/login` | 90% |
+| Dashboard | ✅ | ✅ | `/dashboard` | 90% |
+| 爆款发现 | ✅ | 🔄 Mock | `/dashboard/discover` | 70% |
+| 视频生成 | ✅ Gemini | ✅ Mock | `/dashboard/generate` | 80% |
+| 自动发布 | ❌ | ❌ | `/dashboard/publish` | 0% |
+| 数据监控 | ✅ | 🔄 Mock | `/dashboard/monitoring` | 70% |
 
-**整体进度**: 35% (2/5模块有UI, 3/5模块有API)
+**整体进度**: 65% (5/7模块完成UI + 完整路由架构)
+
+---
+
+## 🎉 今日重大更新 - 完整路由重构
+
+### ✅ 完成的工作
+
+1. **路由架构重构** - 从平级到嵌套
+   - ❌ 旧：`/discover`, `/generate`, `/monitoring`
+   - ✅ 新：`/dashboard/discover`, `/dashboard/generate`, `/dashboard/monitoring`
+   - 统一的dashboard布局和导航栏
+
+2. **新增页面**
+   - ✅ `/dashboard/page.tsx` - 控制台主页（Gemini风格）
+   - ✅ `/dashboard/generate/page.tsx` - 视频生成页（Gemini生成）
+   - ✅ `/login/page.tsx` - 登录页（深色科技风）
+
+3. **页面迁移**
+   - ✅ `app/discover/` → `app/dashboard/discover/`
+   - ✅ `app/monitoring/` → `app/dashboard/monitoring/`
+
+4. **路由更新**
+   - ✅ 首页 `/page.tsx` - 更新所有链接到新路由
+   - ✅ Dashboard导航栏 - 统一导航菜单
 
 ---
 
@@ -40,77 +66,89 @@
 **已建立的工作流**:
 ```
 1. Claude创建契约文件 (types + mock + API) ✅
-2. 用户发给Gemini开发UI                   ⏭️ 下一步
-3. Gemini生成page.tsx
-4. Claude实现真实API
+2. 用户发给Gemini开发UI                   ✅
+3. Gemini生成page.tsx                     ✅
+4. Claude重构路由架构                     ✅ 新增
 5. 集成测试
 ```
 
 ---
 
-## 📁 代码结构
+## 📁 代码结构（重构后）
 
 ```
-contracts/          # 接口契约
-├── discover.contract.ts     ✅
-├── dashboard.contract.ts    ✅
-├── generate.contract.ts     ✅ 新增
-├── GENERATE_PROMPT.md       ✅ 新增
-└── publish.contract.ts      ⏭️ 下一个
-
 app/
-├── page.tsx                 ✅ 首页
-├── dashboard/page.tsx       ✅ 控制台主页
-├── discover/page.tsx        ✅ 爆款发现
-├── generate/page.tsx        ⏭️ Gemini待开发
-└── publish/page.tsx         ❌ 待开发
-
-app/api/
-├── discover/                ✅ 基础API
-├── dashboard/               ✅ 基础API
-├── generate/                ✅ Mock API 新增
-│   ├── tasks/route.ts       ✅ 任务列表
-│   ├── tasks/[id]/route.ts  ✅ 任务详情/删除
-│   ├── create/route.ts      ✅ 创建任务
-│   └── models/route.ts      ✅ 模型列表
-└── publish/                 ❌ 待开发
+├── page.tsx                         ✅ 首页（已更新路由）
+├── login/page.tsx                   ✅ 登录页（新增）
+├── layout.tsx                       ✅ 全局布局
+│
+├── dashboard/                       ✅ 控制台主目录（新结构）
+│   ├── page.tsx                     ✅ Dashboard主页（新增）
+│   ├── discover/page.tsx            ✅ 爆款发现（已迁移）
+│   ├── generate/page.tsx            ✅ 视频生成（新增）
+│   ├── monitoring/page.tsx          ✅ 数据监控（已迁移）
+│   └── publish/page.tsx             ❌ 待开发
+│
+├── api/
+│   ├── discover/                    ✅ 爆款发现API
+│   │   ├── videos/route.ts          ✅
+│   │   └── scrape/route.ts          ✅
+│   ├── generate/                    ✅ 视频生成API（新增）
+│   │   ├── tasks/route.ts           ✅ 任务列表
+│   │   ├── tasks/[id]/route.ts      ✅ 任务详情/删除
+│   │   ├── create/route.ts          ✅ 创建任务
+│   │   └── models/route.ts          ✅ 模型列表
+│   ├── dashboard/                   ✅ Dashboard API
+│   ├── monitoring/                  ✅ 监控API
+│   └── publish/                     ❌ 待开发
+│
+└── 旧文件（已废弃）
+    ├── discover/                    ⚠️ 已迁移到 dashboard/
+    └── monitoring/                  ⚠️ 已迁移到 dashboard/
 ```
 
 ---
 
-## 🎉 今日完成 (Day 1)
+## 🗂️ 文件清单（按模块分类）
 
-### ✅ 视频生成模块基础建设
-1. ✅ `contracts/generate.contract.ts` - 完整类型定义 + Mock数据
-   - 5种类型: GenerateTask, GenerateParams, ModelInfo等
-   - 4个AI模型: Minimax, Runway, Kling, Sora
-   - 5个示例任务
+### 1. 公开营销端
+- ✅ `app/page.tsx` - Landing Page（已更新路由）
+- ✅ `app/login/page.tsx` - 登录页（新增）
 
-2. ✅ `contracts/GENERATE_PROMPT.md` - Gemini开发指令
-   - 详细UI布局规范
-   - 交互功能要求
-   - 技术实现细节
+### 2. 控制台端（Dashboard）
+- ✅ `app/dashboard/page.tsx` - 主页（新增，带导航栏）
+- ✅ `app/dashboard/discover/page.tsx` - 爆款发现
+- ✅ `app/dashboard/generate/page.tsx` - 视频生成（Gemini生成）
+- ✅ `app/dashboard/monitoring/page.tsx` - 数据监控
+- ❌ `app/dashboard/publish/page.tsx` - 自动发布（待开发）
 
-3. ✅ 4个Mock API端点
-   - GET `/api/generate/tasks` - 任务列表（筛选/搜索/排序）
-   - POST `/api/generate/create` - 创建任务（验证+成本计算）
-   - GET/DELETE `/api/generate/tasks/[id]` - 任务操作
-   - GET `/api/generate/models` - 模型列表
+### 3. API端点
+- ✅ `/api/discover/*` - 爆款发现
+- ✅ `/api/generate/*` - 视频生成（新增）
+- ✅ `/api/dashboard/*` - Dashboard
+- ✅ `/api/monitoring/*` - 监控
+
+### 4. 契约文件
+- ✅ `contracts/discover.contract.ts`
+- ✅ `contracts/dashboard.contract.ts`
+- ✅ `contracts/generate.contract.ts`（新增）
+- ✅ `contracts/GENERATE_PROMPT.md`（新增）
+- ⏭️ `contracts/publish.contract.ts`（待创建）
 
 ---
 
 ## 🐛 技术债务
 
 ### 高优先级
-1. **类型不统一**: Gemini生成的UI用自己的类型，未使用contracts
-2. **Mock API**: discover/dashboard/generate API都是mock，未集成真实服务
+1. ~~路由架构混乱~~ ✅ **已解决** - 完成嵌套路由重构
+2. **Mock API**: 所有API都是mock，需集成真实服务
 3. **无错误处理**: 前端缺少统一的错误边界
-4. **无用户认证**: 所有页面都是公开的
+4. **无用户认证**: 登录页仅为演示
 
 ### 中优先级
-5. **无加载状态**: API调用缺少loading UI
-6. **无数据持久化**: 前端state刷新后丢失（Mock数据存在内存）
-7. **硬编码数据**: 很多数据是写死的
+5. **无加载状态**: 部分API调用缺少loading UI
+6. **无数据持久化**: 前端state刷新后丢失
+7. **旧文件清理**: `app/discover/` 和 `app/monitoring/` 需要删除
 
 ### 低优先级
 8. **无国际化**: 只有中文
@@ -122,40 +160,40 @@ app/api/
 ## 📋 下一个Sprint (3天)
 
 ### Sprint目标
-**完成视频生成和YouTube发布的UI + 基础API**
+**完成自动发布模块 + 集成真实API**
 
-### Day 1: 视频生成 (今天) ✅
-- [x] ✅ Claude创建 `contracts/generate.contract.ts`
-- [x] ✅ Claude创建 `contracts/GENERATE_PROMPT.md`
-- [x] ✅ Claude实现 Mock API (4个端点)
-- [ ] 🔄 Gemini开发 `app/generate/page.tsx` - **下一步**
-
-### Day 2: YouTube发布UI
+### Day 1: 清理旧文件 + Publish契约
+- [x] ✅ 完成路由重构
+- [ ] 删除 `app/discover/` 和 `app/monitoring/` 旧文件
 - [ ] Claude创建 `contracts/publish.contract.ts`
-- [ ] Gemini开发 `app/publish/page.tsx`
-- [ ] Claude实现 `app/api/publish/route.ts` (mock)
+- [ ] Gemini开发 `app/dashboard/publish/page.tsx`
 
-### Day 3: 集成真实API
-- [ ] 集成FAL.AI视频生成
+### Day 2: Publish API + YouTube集成
+- [ ] Claude实现 `app/api/publish/route.ts` (mock)
 - [ ] 集成YouTube OAuth
+- [ ] YouTube上传功能
+
+### Day 3: 真实API集成
+- [ ] 集成FAL.AI视频生成
+- [ ] 集成Apify爬虫
 - [ ] 端到端测试
 
 ### Sprint完成标准
-- ✅ 5个页面UI全部完成
-- ✅ 所有页面可访问
-- ✅ Mock数据展示正常
+- ✅ 所有页面可访问（新路由）
 - ✅ 导航流程通顺
+- ✅ Publish模块UI完成
+- ⏭️ 至少1个真实API集成完成
 
 ---
 
 ## 🎯 技术栈
 
 ```
-前端: Next.js 14 + TypeScript + Tailwind
+前端: Next.js 14 + TypeScript + Tailwind + Framer Motion
 UI开发: Gemini 3.0 🆕
 数据库: Supabase
 AI分析: Google Gemini
-视频生成: FAL.AI
+视频生成: FAL.AI (Minimax, Runway, Kling)
 爬虫: Apify
 ```
 
@@ -170,18 +208,14 @@ AI分析: Google Gemini
 
 ---
 
-## 📝 Gemini开发指令
+## 🎊 里程碑
 
-复制以下内容发给Gemini开发视频生成页面UI：
+- ✅ **V1.0** - 基础架构搭建
+- ✅ **V2.0** - Discovery模块完成
+- ✅ **V3.0** - Generate契约+API完成
+- ✅ **V4.0** - 完整路由重构 + Dashboard主页 🎉 **今天**
+- ⏭️ **V5.0** - Publish模块完成（下一个）
 
-```
-请阅读这个指令文档：
-https://github.com/372768498/shipinzidonghua1119/blob/main/contracts/GENERATE_PROMPT.md
+---
 
-并参考契约文件：
-https://github.com/372768498/shipinzidonghua1119/blob/main/contracts/generate.contract.ts
-
-生成完整的 app/generate/page.tsx 文件
-```
-
-**下一步**: 发给Gemini开发UI，15分钟搞定！🚀
+**下一步**: 清理旧文件，开始Publish模块！🚀
