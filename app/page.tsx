@@ -14,13 +14,13 @@ export default function Home() {
         
         <div className="flex gap-4 mt-8">
           <a
-            href="/discover"
+            href="/dashboard/discover"
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
             🔍 发现爆款
           </a>
           <a
-            href="/generate"
+            href="/dashboard/generate"
             className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
           >
             🎬 生成视频
@@ -40,7 +40,7 @@ export default function Home() {
               AI自动分析TikTok、YouTube等平台的热门视频
             </p>
             <a
-              href="/discover"
+              href="/dashboard/discover"
               className="text-sm text-primary hover:underline"
             >
               立即体验 →
@@ -52,7 +52,7 @@ export default function Home() {
               基于爆款创意，使用AI模型生成原创视频内容
             </p>
             <a
-              href="/generate"
+              href="/dashboard/generate"
               className="text-sm text-primary hover:underline"
             >
               开始创作 →
