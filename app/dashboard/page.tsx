@@ -38,34 +38,35 @@ const mockActivities: RecentActivity[] = [
     id: '1',
     type: 'discover',
     title: '发现 25 个 TikTok 爆款视频',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
+    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1小时前
     status: 'success'
   },
   {
     id: '2',
     type: 'generate',
     title: '生成视频：AI 编程教程系列 #04',
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    timestamp: new Date(Date.now() - 7200000).toISOString(), // 2小时前
     status: 'processing'
   },
   {
     id: '3',
     type: 'publish',
     title: '自动发布到 YouTube Shorts',
-    timestamp: new Date(Date.now() - 10800000).toISOString(),
+    timestamp: new Date(Date.now() - 10800000).toISOString(), // 3小时前
     status: 'success'
   },
   {
     id: '4',
     type: 'publish',
     title: '发布任务失败：Token 过期',
-    timestamp: new Date(Date.now() - 86400000).toISOString(),
+    timestamp: new Date(Date.now() - 86400000).toISOString(), // 1天前
     status: 'failed'
   }
 ];
 
 // --- 2. 辅助组件 ---
 
+// 状态徽章
 const StatusBadge = ({ status }: { status: RecentActivity['status'] }) => {
   const styles = {
     success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
@@ -91,6 +92,7 @@ const StatusBadge = ({ status }: { status: RecentActivity['status'] }) => {
 
 export default function DashboardHome() {
   
+  // 获取问候语
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -105,6 +107,7 @@ export default function DashboardHome() {
       <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0B0F17]/80 backdrop-blur-xl">
         <div className="flex h-16 items-center justify-between px-6 max-w-[1600px] mx-auto">
           <div className="flex items-center gap-8">
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
               <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center shadow-lg shadow-indigo-500/20">
                 <Zap size={18} className="text-white" fill="currentColor" />
@@ -112,6 +115,7 @@ export default function DashboardHome() {
               Jilo.ai
             </Link>
 
+            {/* 导航菜单 */}
             <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/5">
               <Link href="/dashboard" className="px-4 py-1.5 text-xs font-medium text-white bg-white/10 rounded-full transition-all">
                 首页
@@ -131,6 +135,7 @@ export default function DashboardHome() {
             </div>
           </div>
 
+          {/* 右侧工具栏 */}
           <div className="flex items-center gap-4">
             <button className="relative p-2 text-slate-400 hover:text-white hover:bg-white/5 rounded-full transition-colors">
               <Bell size={18} />
@@ -164,7 +169,7 @@ export default function DashboardHome() {
           </div>
         </motion.div>
 
-        {/* --- 2. 统计卡片 --- */}
+        {/* --- 2. 统计卡片 (Grid) --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             label="Total Scraped" 
@@ -196,9 +201,10 @@ export default function DashboardHome() {
           />
         </div>
 
-        {/* --- 3. 快捷操作 & 最近活动 --- */}
+        {/* --- 3. 快捷操作 & 最近活动 (Split Layout) --- */}
         <div className="grid lg:grid-cols-12 gap-8">
           
+          {/* 左侧：快捷操作入口 (8 cols) */}
           <div className="lg:col-span-7 space-y-6">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <Zap size={18} className="text-yellow-400" /> 快捷操作
@@ -235,6 +241,7 @@ export default function DashboardHome() {
             </div>
           </div>
 
+          {/* 右侧：最近活动时间线 (4 cols) */}
           <div className="lg:col-span-5 space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
@@ -245,6 +252,7 @@ export default function DashboardHome() {
             
             <div className="bg-[#0F1219] border border-white/5 rounded-xl p-6 h-full min-h-[300px]">
               <div className="space-y-6 relative">
+                {/* 垂直连接线 */}
                 <div className="absolute left-[15px] top-2 bottom-2 w-px bg-white/5"></div>
 
                 {mockActivities.map((activity, i) => (
@@ -255,6 +263,7 @@ export default function DashboardHome() {
                     transition={{ delay: 0.5 + i * 0.1 }}
                     className="relative pl-10"
                   >
+                    {/* 图标点 */}
                     <div className={`absolute left-0 top-1 w-8 h-8 rounded-full border border-[#0F1219] flex items-center justify-center z-10 ${
                       activity.type === 'discover' ? 'bg-blue-500/20 text-blue-400' :
                       activity.type === 'generate' ? 'bg-purple-500/20 text-purple-400' :
@@ -288,6 +297,7 @@ export default function DashboardHome() {
   );
 }
 
+// --- 子组件: 统计卡片 ---
 function StatCard({ label, value, icon, trend, delay }: any) {
   return (
     <motion.div 
@@ -314,6 +324,7 @@ function StatCard({ label, value, icon, trend, delay }: any) {
   );
 }
 
+// --- 子组件: 快捷操作卡片 ---
 function ActionCard({ title, desc, icon, href, color }: any) {
   return (
     <Link href={href} className="group relative overflow-hidden p-6 bg-[#0F1219] border border-white/5 rounded-xl hover:border-white/10 transition-all">
