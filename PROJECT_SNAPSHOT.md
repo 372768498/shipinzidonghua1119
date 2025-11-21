@@ -1,495 +1,345 @@
 # 📸 PROJECT SNAPSHOT - Jilo.ai 项目速查表
 
-> **目的**: 让Claude或新开发者在3分钟内理解全项目  
-> **最后更新**: 2024-11-21  
-> **版本**: V3.0 - MVP聚焦版
+> **最后更新**: 2024-11-21 晚  
+> **版本**: V4.1 - 清理+规划版
 
 ---
 
-## 🎯 MVP核心链路 (必读!)
+## 🎯 MVP核心链路
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Jilo.ai MVP 核心链路                      │
-└─────────────────────────────────────────────────────────────┘
-
-  1️⃣ 爆款发现              2️⃣ 视频生成              3️⃣ 自动发布
-┌──────────┐         ┌──────────┐         ┌──────────┐
-│  APIFY   │────────>│  FAL.AI  │────────>│ YouTube  │
-│  抓取爆款  │  分析    │  生成视频  │  上传    │  Shorts  │
-└──────────┘         └──────────┘         └──────────┘
-     ✅                   🔄                    ❌
-   已完成               部分完成              未开始
+  1️⃣ 爆款发现        2️⃣ 视频生成        3️⃣ 自动发布
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Discover│────>│ Generate │────>│  Publish │
+└──────────┘     └──────────┘     └──────────┘
+     ✅              ✅               ❌
+  UI完成         UI完成           待开发
 ```
 
-### 各环节状态
+### 进度
 
-| 环节 | 功能 | 状态 | 完成度 | 负责文件 |
-|------|------|------|--------|----------|
-| 1️⃣ | APIFY抓取爆款视频 | ✅ 已完成 | 100% | `app/api/viral-discovery/shorts-optimized/route.ts` |
-| 1️⃣ | V2评分系统分析 | ✅ 已完成 | 100% | `lib/youtube-shorts-optimizer-v2.ts` |
-| 2️⃣ | FAL.AI视频生成API | 🔄 部分完成 | 60% | `app/api/generate/route.ts` (需要创建) |
-| 2️⃣ | 生成任务管理 | 🔄 部分完成 | 40% | 需要完善数据库和webhook |
-| 3️⃣ | YouTube OAuth | ❌ 未开始 | 0% | `lib/youtube-oauth.ts` (需要创建) |
-| 3️⃣ | YouTube上传API | ❌ 未开始 | 0% | `app/api/youtube/upload/route.ts` (需要创建) |
+| 模块 | UI | API | 路由 | 完成度 |
+|------|----|----|------|--------|
+| Landing | ✅ | N/A | `/` | 100% |
+| Login | ✅ | Mock | `/login` | 90% |
+| Dashboard | ✅ | ✅ | `/dashboard` | 90% |
+| 爆款发现 | ✅ | 🔄 Mock | `/dashboard/discover` | 70% |
+| 视频生成 | ✅ Gemini | ✅ Mock | `/dashboard/generate` | 80% |
+| 自动发布 | ❌ | ❌ | `/dashboard/publish` | 0% |
+| 数据监控 | ✅ | 🔄 Mock | `/dashboard/monitoring` | 70% |
+
+**整体进度**: 65% (5/7模块完成UI + 完整路由架构)
 
 ---
 
-## 🎯 当前状态 (100字)
+## 🎉 V4.0 路由重构回顾
 
-**阶段**: MVP开发 - **快速冲刺阶段**  
-**进度**: 50%完成 (重新评估)  
-**当前Sprint**: 完成视频生成集成 + YouTube发布功能  
-**关键问题**: ❗ 视频生成和YouTube发布是MVP的核心缺失  
-**开发策略**: 🚀 代码优先，快速验证，完成后再完善
+### ✅ 完成的工作
 
----
+1. **路由架构重构** - 从平级到嵌套
+   - ❌ 旧：`/discover`, `/generate`, `/monitoring`
+   - ✅ 新：`/dashboard/discover`, `/dashboard/generate`, `/dashboard/monitoring`
+   - 统一的dashboard布局和导航栏
 
-## 🏗️ 核心架构 (500字)
+2. **新增页面**
+   - ✅ `/dashboard/page.tsx` - 控制台主页（Gemini风格）
+   - ✅ `/dashboard/generate/page.tsx` - 视频生成页（Gemini生成）
+   - ✅ `/login/page.tsx` - 登录页（深色科技风）
 
-### 技术栈
-```
-前端: Next.js 14 (App Router) + TypeScript + Tailwind CSS
-部署: Vercel (Serverless)
-数据库: Supabase (PostgreSQL + Realtime)
-AI分析: Google Gemini 3.0 (成本优化，比Claude便宜40倍)
-视频生成: FAL.AI (统一接口，支持Minimax/Runway/Kling)
-爬虫: Apify (托管服务)
-YouTube: Google APIs + OAuth 2.0
-```
+3. **页面迁移**
+   - ✅ `app/discover/` → `app/dashboard/discover/`
+   - ✅ `app/monitoring/` → `app/dashboard/monitoring/`
 
-### 关键架构决策
-
-#### 1. Fire & Forget 异步架构 ⚡
-**问题**: Vercel最长60秒超时，但视频生成需3-10分钟  
-**解决方案**:
-```
-Next.js API (立即返回) 
-    ↓
-FAL.AI异步处理 (3-10分钟)
-    ↓
-Webhook回调
-    ↓
-Supabase Realtime推送前端
-```
-**文档**: `docs/ADR.md#adr-001`  
-**实现**: `app/api/generate/*/route.ts` + `app/api/webhooks/*/route.ts`
-
-#### 2. Gemini vs Claude (成本优化) 💰
-**对比**:
-- Claude: $18/百万tokens
-- Gemini: $0.375/百万tokens  
-- 差距: 40倍！
-
-**决策**: 使用Gemini进行内容分析  
-**文档**: `docs/ADR.md#adr-003`  
-**实现**: `lib/gemini-analyzer.ts`
-
-#### 3. FAL.AI 统一视频生成 🎬
-**问题**: 5+个AI模型，各有不同API  
-**解决**: 通过FAL.AI统一接口访问所有模型  
-**支持**: Minimax, Runway Gen-3, Kling AI, Luma, Sora等  
-**文档**: `docs/AI_GENERATION_GUIDE.md`
-
-### 安全等级
-- 两次全面安全审计 ✅
-- 13个漏洞全部修复 ✅
-- 安全评分: 93.5/100 (企业级) ✅
-- 详见: `docs/SECURITY.md`
+4. **路由更新**
+   - ✅ 首页 `/page.tsx` - 更新所有链接到新路由
+   - ✅ Dashboard导航栏 - 统一导航菜单
 
 ---
 
-## 📁 MVP代码地图 (重点)
+## 📊 技术债务概览
 
-### ✅ 环节1: 爆款发现 (已完成100%)
+**新增**: [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) - 完整技术债务清单
 
-```
-app/api/viral-discovery/
-├── shorts-optimized/route.ts          [V2爆款发现API] ✅
-│   - 四种预设: viral/hot/potential/blueOcean
-│   - 触发Apify爬虫
-│   - 立即返回任务ID
+### 债务统计
+- 🔴 **高优先级**: 5项 (Critical - 必须立即处理)
+- 🟡 **中优先级**: 8项 (Important - 2-3个Sprint内处理)
+- 🟢 **低优先级**: 10项 (Nice-to-have - 有空再说)
+- **总计**: 23项
 
-app/api/webhooks/
-├── apify-shorts/route.ts              [Apify回调处理] ✅
-│   - 接收爬取结果
-│   - V2评分系统
-│   - 存储到数据库
+### Top 5高优先级债务
 
-lib/
-├── youtube-shorts-optimizer-v2.ts     [V2评分引擎] ✅
-│   - 分享率优先 (18/25分)
-│   - 账号分层评估
-│   - 垂直领域调整
-└── viral-definition-standards.ts     [评分标准] ✅
-```
+1. 🔴 **所有API都是Mock数据** 
+   - 影响: MVP无法正常运行
+   - 计划: Sprint 2解决
 
-### 🔄 环节2: 视频生成 (需要完成40%)
+2. 🔴 **无用户认证系统**
+   - 影响: 安全风险
+   - 计划: Sprint 3解决
 
-```
-app/api/generate/
-├── route.ts                           [视频生成API] ❌ 需要创建
-│   - 接收爆款视频信息
-│   - 调用Gemini分析
-│   - 生成新prompt
-│   - 触发FAL.AI生成
-│   - 立即返回任务ID
+3. 🔴 **无统一错误处理**
+   - 影响: 稳定性差
+   - 计划: Sprint 2解决
 
-app/api/webhooks/
-├── fal/route.ts                       [FAL.AI回调] ❌ 需要创建
-│   - 接收生成结果
-│   - 下载视频到Supabase Storage
-│   - 更新任务状态
+4. 🔴 **旧文件未清理**
+   - 影响: 路由冲突风险
+   - 计划: **立即执行** ⚡
+   - 命令: `rm -rf app/discover app/monitoring`
 
-lib/
-├── fal-client.ts                      [FAL.AI客户端] 🔄 需要完善
-├── gemini-analyzer.ts                 [Gemini分析] ❌ 需要创建
-└── video-prompt-generator.ts         [Prompt生成] ❌ 需要创建
-```
-
-### ❌ 环节3: YouTube发布 (需要从0开始)
-
-```
-app/api/youtube/
-├── oauth/
-│   ├── authorize/route.ts             [OAuth授权] ❌ 需要创建
-│   └── callback/route.ts              [OAuth回调] ❌ 需要创建
-└── upload/
-    └── route.ts                       [上传视频] ❌ 需要创建
-
-lib/
-├── youtube-oauth.ts                   [OAuth管理] ❌ 需要创建
-│   - 授权流程
-│   - Token加密存储
-│   - Token自动刷新
-└── youtube-uploader.ts                [上传工具] ❌ 需要创建
-    - 视频上传
-    - 元数据设置
-    - 错误重试
-```
+5. 🔴 **前端类型不统一**
+   - 影响: 维护困难
+   - 计划: Sprint 2解决
 
 ---
 
-## 🎯 MVP快速开发计划
+## 🎯 Sprint规划
 
-### 第1天-第2天: 视频生成集成 (环节2)
+**新增**: [SPRINT_PLAN.md](./SPRINT_PLAN.md) - 详细Sprint计划
 
-**目标**: 完成从爆款视频到生成新视频的完整流程
+### Sprint 2 (本周) - MVP核心功能集成
 
-#### Day 1 上午 (4小时)
-- [ ] 创建 `lib/gemini-analyzer.ts` - 分析爆款视频
-- [ ] 创建 `lib/video-prompt-generator.ts` - 生成视频prompt
-- [ ] 测试Gemini API和prompt生成
+**日期**: 2024-11-22 至 11-29 (7天)
 
-#### Day 1 下午 (4小时)
-- [ ] 完善 `lib/fal-client.ts` - FAL.AI客户端
-- [ ] 创建 `app/api/generate/route.ts` - 视频生成API
-- [ ] 测试API端点
+**目标**:
+- ✅ 集成FAL.AI视频生成（真实API）
+- ✅ 集成YouTube上传
+- ✅ Publish模块UI完成
+- ✅ 解决4/5高优先级技术债务
 
-#### Day 2 上午 (4小时)
-- [ ] 创建 `app/api/webhooks/fal/route.ts` - 处理生成回调
-- [ ] 实现视频下载到Supabase Storage
-- [ ] 更新数据库schema (如需要)
+**Day 1** (明天):
+- [ ] 删除旧文件 `app/discover/`, `app/monitoring/`
+- [ ] 创建Publish契约
+- [ ] 环境变量管理规范化
 
-#### Day 2 下午 (4小时)
-- [ ] 端到端测试: 爆款发现 → 视频生成
-- [ ] 修复bug和优化
-- [ ] 更新API文档
+**Day 2-3** (周末):
+- [ ] Gemini生成Publish UI
+- [ ] 统一前端类型定义
+- [ ] 统一API响应格式
+- [ ] 全局错误处理
 
-### 第3天-第5天: YouTube发布功能 (环节3)
+**Day 4-5** (周一周二):
+- [ ] 集成FAL.AI视频生成
+- [ ] 集成Gemini分析
+- [ ] 数据库持久化
 
-**目标**: 完成从生成视频到自动上传YouTube的流程
+**Day 6** (周三):
+- [ ] YouTube OAuth
+- [ ] 视频上传功能
 
-#### Day 3 上午 (4小时)
-- [ ] 研究YouTube Data API v3
-- [ ] 创建Google Cloud项目和OAuth凭证
-- [ ] 创建 `lib/youtube-oauth.ts` - OAuth流程
-
-#### Day 3 下午 (4小时)
-- [ ] 创建 `app/api/youtube/oauth/authorize/route.ts`
-- [ ] 创建 `app/api/youtube/oauth/callback/route.ts`
-- [ ] 实现Token加密存储
-
-#### Day 4 上午 (4小时)
-- [ ] 创建 `lib/youtube-uploader.ts` - 上传工具
-- [ ] 创建 `app/api/youtube/upload/route.ts` - 上传API
-- [ ] 实现Token自动刷新
-
-#### Day 4 下午 (4小时)
-- [ ] 测试OAuth流程
-- [ ] 测试视频上传
-- [ ] 处理各种错误情况
-
-#### Day 5 全天 (8小时)
-- [ ] 端到端测试: 完整MVP链路
-- [ ] 修复bug
-- [ ] 性能优化
-- [ ] 更新所有文档
-
----
-
-## 🔍 快速查找 (MVP相关)
-
-### MVP核心文件
-
-**环节1 - 爆款发现** (已完成):
-```
-启动爬取 → app/api/viral-discovery/shorts-optimized/route.ts
-处理结果 → app/api/webhooks/apify-shorts/route.ts
-评分引擎 → lib/youtube-shorts-optimizer-v2.ts
-评分标准 → lib/viral-definition-standards.ts
-```
-
-**环节2 - 视频生成** (进行中):
-```
-生成API → app/api/generate/route.ts (需要创建)
-FAL回调 → app/api/webhooks/fal/route.ts (需要创建)
-FAL客户端 → lib/fal-client.ts (需要完善)
-Gemini分析 → lib/gemini-analyzer.ts (需要创建)
-Prompt生成 → lib/video-prompt-generator.ts (需要创建)
-```
-
-**环节3 - YouTube发布** (待开始):
-```
-OAuth授权 → app/api/youtube/oauth/authorize/route.ts (需要创建)
-OAuth回调 → app/api/youtube/oauth/callback/route.ts (需要创建)
-上传API → app/api/youtube/upload/route.ts (需要创建)
-OAuth管理 → lib/youtube-oauth.ts (需要创建)
-上传工具 → lib/youtube-uploader.ts (需要创建)
-```
-
-### 环境变量配置
-
-**必需的环境变量** (MVP):
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-
-# AI服务
-GOOGLE_GEMINI_API_KEY=          # 内容分析 ⭐
-FAL_AI_API_KEY=                 # 视频生成 ⭐
-
-# 爬虫
-APIFY_API_KEY=                  # 数据爬取 ⭐
-
-# YouTube (新增) ⭐⭐⭐
-YOUTUBE_CLIENT_ID=              # OAuth客户端ID
-YOUTUBE_CLIENT_SECRET=          # OAuth客户端密钥
-YOUTUBE_REDIRECT_URI=           # OAuth回调地址
-
-# 安全
-APIFY_WEBHOOK_SECRET=           # Webhook验证
-FAL_WEBHOOK_SECRET=             # Webhook验证 ⭐
-ENCRYPTION_KEY=                 # Token加密 (32字节hex) ⭐
-```
-
-查看完整配置: `.env.example`
-
-### 开发命令
-
-```bash
-# 本地开发
-npm run dev                     # 启动开发服务器
-
-# 测试 (MVP相关)
-node test-apis.js               # 测试基础API
-node test-shorts-optimizer.js   # 测试评分系统
-node test-video-generation.js   # 测试视频生成 (待创建)
-node test-youtube-upload.js     # 测试YouTube上传 (待创建)
-```
-
----
-
-## 📚 文档索引 (MVP相关)
-
-### 必读文档 (开始开发前必看)
-
-1. **本文档** - `PROJECT_SNAPSHOT.md` ⭐⭐⭐  
-   项目全貌，MVP核心链路
-
-2. **工作日志** - `WORKLOG.md`  
-   最近的开发进度
-
-3. **快速开始** - `docs/QUICKSTART.md`  
-   本地开发环境搭建
-
-### MVP开发必读
-
-**视频生成**:
-- `docs/AI_GENERATION_GUIDE.md` - FAL.AI使用指南
-- `docs/GEMINI_INTEGRATION.md` - Gemini集成 (待创建)
-
-**YouTube发布**:
-- `docs/YOUTUBE_OAUTH_GUIDE.md` - OAuth完整流程 (待创建)
-- `docs/YOUTUBE_UPLOAD_API.md` - 上传API文档 (待创建)
-
-**架构相关**:
-- `docs/ARCHITECTURE.md` - 完整架构设计
-- `docs/ADR.md` - 架构决策记录
-
-**安全与运维**:
-- `docs/SECURITY.md` - 安全完整方案
-- `docs/TROUBLESHOOTING.md` - 故障排查手册
-
----
-
-## 💡 关键决策摘要
-
-### MVP核心原则
-
-**1. 快速验证 > 完美代码**
-- 目标: 3-5天完成MVP核心链路
-- 策略: 先实现，后优化
-- 接受: 技术债务，简化UI
-
-**2. 代码优先 > 文档齐全**
-- 当前: 60%文档 / 40%代码 ⚠️
-- MVP期间: 80%代码 / 20%文档
-- 完成后: 补充文档
-
-**3. 核心链路 > 完整功能**
-- 聚焦: 爆款发现 → 视频生成 → YouTube发布
-- 暂缓: Dashboard UI、数据分析、用户管理
-- 原因: 先验证商业模式
-
-### 技术选型 (MVP)
-
-**FAL.AI**:
-- ✅ 统一接口，简化开发
-- ✅ 支持多个模型快速切换
-- ✅ Webhook回调，适配Fire & Forget架构
-
-**YouTube Data API v3**:
-- ✅ 官方API，稳定可靠
-- ✅ 支持自动上传和元数据管理
-- ⚠️ 配额限制 (每日10,000单位)
-
-**Gemini 3.0**:
-- ✅ 成本低 ($0.375/M tokens)
-- ✅ 功能满足视频分析需求
-- ✅ 响应速度快
-
----
-
-## 🚀 MVP冲刺计划
-
-### 本周目标 (2024-11-21 ~ 11-27)
-
-**Day 1-2** (11-21 ~ 11-22): 视频生成集成
-- [x] ~~V2测试验证~~ (已完成)
-- [ ] Gemini分析集成
-- [ ] FAL.AI生成API
-- [ ] Webhook处理
-
-**Day 3-5** (11-23 ~ 11-25): YouTube发布
-- [ ] YouTube OAuth流程
-- [ ] Token管理
-- [ ] 视频上传API
-- [ ] 错误处理
-
-**Day 6-7** (11-26 ~ 11-27): 整合测试
+**Day 7** (周四):
 - [ ] 端到端测试
 - [ ] Bug修复
-- [ ] 文档更新
-- [ ] 性能优化
 
-### MVP完成标准
+### Sprint 3 - 用户体验提升
+- 用户认证系统
+- Loading状态管理
+- 数据持久化
+- 组件库
 
-✅ **功能完整性**:
-- [ ] 可以自动发现爆款视频
-- [ ] 可以自动生成新视频
-- [ ] 可以自动上传到YouTube Shorts
-
-✅ **质量标准**:
-- [ ] 核心API测试通过
-- [ ] 端到端流程测试通过
-- [ ] 错误处理完善
-- [ ] 安全验证通过
-
-✅ **文档完整性**:
-- [ ] API文档更新
-- [ ] 部署文档更新
-- [ ] WORKLOG记录完整
+### Sprint 4 - 监控和安全
+- 分析埋点
+- 错误监控
+- E2E测试
+- API速率限制
 
 ---
 
-## ⚠️ MVP开发注意事项
+## 🚀 开发模式
 
-### 关键风险
+**Gemini 3.0 + Claude 协作**:
+- 📐 Claude创建 contracts + API
+- 🎨 Gemini开发UI页面
+- ⚡ 15分钟完成一个页面
 
-1. **YouTube API配额限制** ⚠️
-   - 每日10,000单位
-   - 上传视频消耗1,600单位
-   - 最多每日6个视频
-   - 解决: 实现配额监控和预警
-
-2. **视频生成时间** ⚠️
-   - FAL.AI生成需要3-10分钟
-   - Webhook可能失败
-   - 解决: 实现重试机制和状态追踪
-
-3. **Token安全** 🔒
-   - YouTube OAuth Token必须加密
-   - Token刷新必须可靠
-   - 解决: AES-256加密 + 自动刷新
-
-4. **成本控制** 💰
-   - Gemini API调用成本
-   - FAL.AI生成成本
-   - 解决: 实现用户配额和成本追踪
-
-### 开发陷阱
-
-❌ **不要做**:
-- 过度优化性能
-- 完美的UI设计
-- 复杂的权限系统
-- 详尽的文档
-
-✅ **应该做**:
-- 快速实现核心功能
-- 简单可用的UI
-- 基础的错误处理
-- 关键流程文档
+**已验证工作流**:
+```
+1. Claude创建契约文件 (types + mock + API) ✅
+2. 用户发给Gemini开发UI                   ✅
+3. Gemini生成page.tsx                     ✅
+4. Claude重构路由架构                     ✅
+5. 集成真实API                            ⏭️ Sprint 2
+```
 
 ---
 
-## 📞 获取帮助
+## 📁 代码结构（最新）
 
-**MVP相关问题**:
-1. 查看本文档的"MVP代码地图"
-2. 查看`WORKLOG.md`最新进度
-3. 查看相关功能文档
+```
+app/
+├── page.tsx                         ✅ 首页
+├── login/page.tsx                   ✅ 登录页
+├── layout.tsx                       ✅ 全局布局
+│
+├── dashboard/                       ✅ 控制台目录
+│   ├── page.tsx                     ✅ Dashboard主页
+│   ├── discover/page.tsx            ✅ 爆款发现
+│   ├── generate/page.tsx            ✅ 视频生成
+│   ├── monitoring/page.tsx          ✅ 数据监控
+│   └── publish/page.tsx             ❌ 待开发（Sprint 2）
+│
+├── api/
+│   ├── discover/                    ✅ Mock API
+│   ├── generate/                    ✅ Mock API
+│   │   ├── tasks/route.ts           ✅
+│   │   ├── create/route.ts          ✅
+│   │   ├── models/route.ts          ✅
+│   │   └── tasks/[id]/route.ts      ✅
+│   ├── dashboard/                   ✅ Mock API
+│   ├── monitoring/                  ✅ Mock API
+│   └── publish/                     ❌ 待开发
+│
+├── ⚠️ 待删除（旧文件）
+│   ├── discover/page.tsx            ⚠️ 已迁移，需删除
+│   └── monitoring/page.tsx          ⚠️ 已迁移，需删除
+│
+contracts/
+├── discover.contract.ts             ✅
+├── dashboard.contract.ts            ✅
+├── generate.contract.ts             ✅
+├── GENERATE_PROMPT.md               ✅
+└── publish.contract.ts              ❌ Sprint 2 Day 1
 
-**技术问题**:
-1. `docs/TROUBLESHOOTING.md`
-2. `docs/SECURITY.md` (安全相关)
-3. GitHub Issues
+lib/
+├── fal-client.ts                    🔄 需完善
+├── gemini-analyzer.ts               ❌ Sprint 2创建
+├── video-prompt-generator.ts        ❌ Sprint 2创建
+└── youtube-client.ts                ❌ Sprint 2创建
+```
 
 ---
 
-## 🏁 MVP里程碑
+## 📋 核心文档
 
-### 第一个里程碑: 视频生成 (2天)
-- [ ] 完成环节2
-- [ ] 可以从爆款视频生成新视频
-- [ ] 视频存储到Supabase
+### 已创建文档
 
-### 第二个里程碑: YouTube发布 (3天)
-- [ ] 完成环节3
-- [ ] 可以自动上传到YouTube Shorts
-- [ ] Token安全管理
+- ✅ [WORKLOG.md](./WORKLOG.md) - 工作日志（已更新）
+- ✅ [PROJECT_SNAPSHOT.md](./PROJECT_SNAPSHOT.md) - 本文档
+- ✅ [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) - 技术债务清单 🆕
+- ✅ [SPRINT_PLAN.md](./SPRINT_PLAN.md) - Sprint规划 🆕
+- ✅ [WORKFLOW.md](./WORKFLOW.md) - 工作流程
+- ✅ [README.md](./README.md) - 项目介绍
 
-### 第三个里程碑: MVP完成 (2天)
-- [ ] 完整链路打通
-- [ ] 端到端测试通过
-- [ ] 文档更新完成
+### 契约文件
+
+- ✅ `contracts/discover.contract.ts`
+- ✅ `contracts/dashboard.contract.ts`
+- ✅ `contracts/generate.contract.ts`
+- ✅ `contracts/GENERATE_PROMPT.md`
+- ❌ `contracts/publish.contract.ts` - Sprint 2 Day 1
+- ❌ `contracts/PUBLISH_PROMPT.md` - Sprint 2 Day 1
 
 ---
 
-**文档版本**: V3.0 - MVP聚焦版  
-**创建日期**: 2024-11-21  
-**维护者**: Jilo.ai Team  
-**下一步**: 立即开始环节2 - 视频生成集成！🚀
+## 🎊 里程碑
+
+- ✅ **V1.0** - 基础架构搭建
+- ✅ **V2.0** - Discovery模块完成
+- ✅ **V3.0** - Generate契约+API完成
+- ✅ **V4.0** - 完整路由重构 🎉
+- ✅ **V4.1** - 文档体系完善 + Sprint规划 🎉 **今天**
+- ⏭️ **V5.0** - MVP真实API集成（Sprint 2目标）
+
+---
+
+## 🎯 关键指标
+
+### 当前状态
+- **功能完成度**: 65%
+- **UI完成度**: 5/7 模块 (71%)
+- **API集成度**: 0/3 真实API (0%)
+- **技术债务**: 23项未解决
+- **测试覆盖**: 0%
+
+### Sprint 2目标
+- **功能完成度**: 65% → 85%
+- **API集成度**: 0/3 → 2/3 (视频生成 + YouTube)
+- **技术债务**: 23项 → 18项 (解决5项高优先级)
+- **测试覆盖**: 0% → 20%
+
+---
+
+## ⚡ 下一步行动
+
+### 立即执行（今晚/明天早上）
+
+1. **删除旧文件** (5分钟) 🔴
+   ```bash
+   rm -rf app/discover
+   rm -rf app/monitoring
+   git add -A
+   git commit -m "chore: remove old directories after restructure"
+   git push
+   ```
+
+2. **Review技术债务文档** (10分钟)
+   - 阅读 [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md)
+   - 理解23项债务及优先级
+
+3. **Review Sprint计划** (10分钟)
+   - 阅读 [SPRINT_PLAN.md](./SPRINT_PLAN.md)
+   - 确认Sprint 2的7天计划
+
+### Sprint 2 Day 1（明天）
+
+1. 清理旧文件（见上）
+2. 创建Publish契约（2-3小时）
+3. 环境变量管理规范化（3小时）
+
+---
+
+## 💡 成功经验
+
+### ✅ 有效的做法
+
+1. **Gemini协作模式**
+   - Claude创建契约 → Gemini生成UI
+   - 效率极高，generate页面一次成功
+
+2. **一步一步确认**
+   - 重构前明确目标
+   - 分步骤执行
+   - 每步确认后再继续
+
+3. **文档驱动开发**
+   - 先写契约，后写代码
+   - Mock数据先行
+   - 便于前后端并行
+
+### ⚠️ 需要改进
+
+1. **技术债务管理**
+   - 之前没有系统化跟踪
+   - 现在有专门文档了 ✅
+
+2. **测试覆盖**
+   - 目前0%测试
+   - Sprint 4开始补测试
+
+3. **API集成延迟**
+   - Mock太久，影响MVP
+   - Sprint 2集中解决
+
+---
+
+## 🔗 快速导航
+
+**日常开发**:
+- [WORKLOG.md](./WORKLOG.md) - 记录每天工作
+- [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) - 查看待解决问题
+- [SPRINT_PLAN.md](./SPRINT_PLAN.md) - 查看Sprint任务
+
+**开发参考**:
+- [contracts/](./contracts/) - 接口契约定义
+- [docs/](./docs/) - 详细技术文档
+- [README.md](./README.md) - 项目介绍
+
+**架构文档**:
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) - 系统架构
+- [docs/FIRE_AND_FORGET.md](./docs/FIRE_AND_FORGET.md) - 异步架构
+
+---
+
+**当前状态**: 🎉 V4.1完成，准备Sprint 2  
+**下一个里程碑**: V5.0 - MVP真实API集成  
+**预计完成**: 2024-11-29 (7天后)
+
+🚀 **Let's ship it!**

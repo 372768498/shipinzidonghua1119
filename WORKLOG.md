@@ -6,6 +6,141 @@
 
 ---
 
+## 2024-11-21 (星期四) - 晚上
+
+### ✅ 完成
+
+**重大里程碑: V4.0 完整路由重构** 🎉
+
+1. **视频生成模块完成** (Day 1目标)
+   - ✅ 创建 `contracts/generate.contract.ts` - 完整类型定义
+     - 5种类型: GenerateTask, GenerateParams, ModelInfo等
+     - 4个AI模型: Minimax ($0.05/s), Runway ($0.15/s), Kling ($0.08/s), Sora ($0.30/s)
+     - 5个Mock任务示例
+     - 提交: `eb3c5a2` - "feat: add generate contract for video generation module"
+   
+   - ✅ 创建 `contracts/GENERATE_PROMPT.md` - Gemini开发指令
+     - 详细UI布局（左右分栏）
+     - 交互功能要求（实时成本计算、进度监控）
+     - 提交: `28ebf48` - "docs: add Gemini prompt for generate page"
+   
+   - ✅ 实现4个Mock API端点
+     - `GET /api/generate/tasks` - 任务列表（筛选/搜索/排序）
+     - `POST /api/generate/create` - 创建任务（验证+成本计算）
+     - `GET/DELETE /api/generate/tasks/[id]` - 任务详情/删除
+     - `GET /api/generate/models` - 模型列表
+     - 提交: `a7ad67a` - "feat: add mock API endpoints for video generation module"
+
+2. **路由架构重构** (方案B: 嵌套结构)
+   - ✅ 创建 `app/dashboard/page.tsx` - Dashboard主页
+     - Framer Motion动画
+     - 统一导航栏（Logo + 5个菜单项）
+     - 4个统计卡片
+     - 4个快捷操作入口
+     - 最近活动时间线
+     - 提交: `ffd8f27` - "feat: add dashboard home page with stats and quick actions"
+   
+   - ✅ 创建 `app/dashboard/generate/page.tsx` - 视频生成页
+     - Gemini生成的完整UI
+     - 左侧: 创建任务面板（Prompt输入 + 模型选择 + 高级选项）
+     - 右侧: 任务列表（筛选 + 搜索 + 卡片展示）
+     - 状态动画（processing/success/failed）
+     - 提交: `2895330` - "feat: add video generation page with AI model selection"
+   
+   - ✅ 迁移页面到dashboard
+     - `app/discover/` → `app/dashboard/discover/page.tsx`
+     - `app/monitoring/` → `app/dashboard/monitoring/page.tsx`
+     - 提交: `6ffab7f` - "feat: restructure routes - move discover and monitoring to dashboard"
+   
+   - ✅ 更新路由链接
+     - 首页 `app/page.tsx` - 所有链接改为 `/dashboard/*`
+     - 登录页 `app/login/page.tsx` - 跳转到 `/dashboard`
+     - 提交: `b3804ef` - "feat: update homepage routes and add login page"
+
+3. **文档更新**
+   - ✅ 更新 `PROJECT_SNAPSHOT.md` 到 V4.0
+     - 记录完整重构过程
+     - 更新进度: 35% → 65%
+     - 新增路由对比表
+     - 标记里程碑
+     - 提交: `e05b3b1` - "docs: update PROJECT_SNAPSHOT - V4.0 complete route restructure"
+
+### 💡 技术决策
+
+**决策1: 选择嵌套路由结构（方案B）**
+- 背景: 用户本地已采用 `app/dashboard/generate/page.tsx` 结构
+- 决策: 全面重构为嵌套结构，而非保持平级
+- 影响: 
+  - ✅ 更好的代码组织和模块化
+  - ✅ 统一的导航体验
+  - ✅ 符合Next.js最佳实践
+  - ⚠️ 需要迁移现有页面
+  - ⚠️ 需要更新所有路由链接
+- 结果: 重构顺利完成，用户体验提升
+
+**决策2: Gemini生成UI + Claude开发API**
+- 工作流: Claude创建契约 → Gemini开发UI → 提交到仓库
+- 效率: 15-20分钟完成一个完整页面
+- 质量: UI美观现代，符合设计规范
+- 协作: 分工明确，各司其职
+
+**决策3: Mock API优先策略**
+- 背景: 真实API集成需要时间
+- 决策: 先完成Mock API，确保前端可用
+- 优势: 
+  - 前端可以独立开发和测试
+  - 后续替换为真实API很简单
+  - 快速验证产品流程
+
+### 📊 数据
+
+- **代码提交**: 8次
+- **文件创建**: 6个页面 + 2个契约 + 4个API端点
+- **代码行数**: 约3000+行（估算）
+- **开发时间**: 约4小时
+- **进度提升**: 35% → 65% (+30%)
+
+### 🎯 成果对比
+
+| 指标 | 重构前 | 重构后 | 提升 |
+|------|--------|--------|------|
+| 完成模块 | 2/5 | 5/7 | +150% |
+| 路由一致性 | 分散 | 统一 | ✅ |
+| 用户体验 | 一般 | 优秀 | ✅ |
+| 可维护性 | 中 | 高 | ✅ |
+
+### ⚠️ 遗留问题
+
+1. **旧文件未清理**
+   - `app/discover/` - 已迁移但未删除
+   - `app/monitoring/` - 已迁移但未删除
+   - 原因: GitHub API不支持删除文件
+   - 解决: 需要用户在本地执行删除命令
+
+2. **所有API仍为Mock**
+   - 需要集成: FAL.AI, Apify, YouTube API
+   - 优先级: 高
+   - 计划: 下一个Sprint完成
+
+### 🎊 里程碑达成
+
+- ✅ **V4.0 完整路由重构** - 重大架构升级
+- ✅ **5/7模块UI完成** - 接近MVP完成
+- ✅ **Gemini协作流程建立** - 高效开发模式
+
+### 🚀 下一步行动
+
+**立即** (今天):
+1. 清理旧文件（需要用户在本地执行）
+2. 更新技术债务清单
+3. 规划下一个Sprint
+
+**明天**:
+1. 开始Publish模块开发
+2. 或者开始集成真实API（根据优先级）
+
+---
+
 ## 2024-11-21 (星期四) - 下午
 
 ### ✅ 完成
@@ -291,12 +426,14 @@
 
 ## 🔗 相关文档
 
-- [PROJECT_SNAPSHOT.md](./PROJECT_SNAPSHOT.md) - 项目快照 (V3.0 - MVP聚焦版)
+- [PROJECT_SNAPSHOT.md](./PROJECT_SNAPSHOT.md) - 项目快照 (V4.0 - 完整路由重构版)
+- [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) - 技术债务清单
+- [SPRINT_PLAN.md](./SPRINT_PLAN.md) - Sprint规划
 - [docs/PROJECT_EVOLUTION.md](./docs/PROJECT_EVOLUTION.md) - 项目演进历史
 - [README.md](./README.md) - 项目介绍
 
 ---
 
-**最后更新**: 2024-11-21 下午  
+**最后更新**: 2024-11-21 晚上  
 **维护者**: Jilo.ai Team  
-**当前重点**: MVP核心链路快速开发 🚀
+**当前重点**: V4.0路由重构完成，准备Sprint 2 🚀

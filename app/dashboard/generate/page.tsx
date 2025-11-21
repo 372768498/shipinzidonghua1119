@@ -6,7 +6,7 @@ import {
   Sparkles, Play, Clock, AlertCircle, CheckCircle2, 
   Settings2, RefreshCw, Download, Trash2, Wand2, 
   Layers, MoreHorizontal, Video, Film, Search,
-  Maximize2, Loader2, UploadCloud  // <--- 已添加 UploadCloud
+  Maximize2, Loader2, UploadCloud
 } from "lucide-react";
 
 // --- 1. 契约定义 (模拟 contracts/generate.contract.ts) ---
@@ -188,8 +188,6 @@ export default function GeneratePage() {
         enhancePrompt
       });
       setTasks(prev => [newTask, ...prev]);
-      // Reset crucial fields
-      // setPrompt(""); // Optional: keep prompt for iteration
     } catch (e) {
       console.error(e);
     } finally {

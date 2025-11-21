@@ -108,12 +108,12 @@ export default function DashboardHome() {
         <div className="flex h-16 items-center justify-between px-6 max-w-[1600px] mx-auto">
           <div className="flex items-center gap-8">
             {/* Logo */}
-            <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
+            <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
               <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center shadow-lg shadow-indigo-500/20">
                 <Zap size={18} className="text-white" fill="currentColor" />
               </div>
               Jilo.ai
-            </div>
+            </Link>
 
             {/* 导航菜单 */}
             <div className="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/5">
