@@ -14,17 +14,20 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     
+    // 模拟登录延迟
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/dashboard"); // 登录成功跳转到控制台
     }, 1500);
   };
 
   return (
     <div className="min-h-screen bg-[#0B0F17] text-slate-200 font-sans flex flex-col relative overflow-hidden">
       
+      {/* 背景装饰 */}
       <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none"></div>
 
+      {/* 顶部 Logo */}
       <div className="p-8">
         <Link href="/" className="flex items-center gap-3 w-fit">
           <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center shadow-lg shadow-indigo-500/20">
@@ -102,6 +105,7 @@ export default function LoginPage() {
 
           </div>
           
+          {/* 底部演示提示 */}
           <div className="text-center mt-8 text-xs text-slate-600 font-mono">
             DEMO MODE: 点击登录即可直接进入
           </div>
